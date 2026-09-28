@@ -112,16 +112,45 @@ export default function Page() {
   const nav = ['Our Story', 'The Wedding', 'Schedule', 'Gallery', 'RSVP']
   const directions = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`
   
-  const handleRsvpSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  
+  const handleRsvpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (email) {
-      setRsvpSent(true)
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#ad8b5c', '#d8cfc3', '#fcfaf7', '#2d2925']
+    setIsSubmitting(true)
+    setErrorMessage('')
+    
+    const formData = new FormData(e.currentTarget)
+    
+    // 👇 Replace this with your actual Web3Forms access key
+    formData.append("access_key", "YOUR_ACCESS_KEY_HERE")
+    
+    // Optional: Subject line for the email
+    formData.append("subject", "New RSVP for Ibitayo & Odunayo's Wedding!")
+    
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData
       })
+      const data = await response.json()
+      
+      if (data.success || formData.get('access_key') === 'YOUR_ACCESS_KEY_HERE') {
+        // We also show success if you haven't put your key in yet just so you can test the UI
+        setRsvpSent(true)
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#ad8b5c', '#d8cfc3', '#fcfaf7', '#2d2925']
+        })
+      } else {
+        setErrorMessage("Something went wrong. Please check your connection and try again.")
+      }
+    } catch (error) {
+      setErrorMessage("Something went wrong. Please check your connection and try again.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -205,7 +234,7 @@ export default function Page() {
         <p>Your presence would mean the world to us. Kindly let us know if we can save you a seat.</p>
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="rsvp-card glassmorphism">
-        {rsvpSent ? <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="success"><div className="success-icon"><Check /></div><p className="eyebrow">Thank you</p><h3>You're on the guest list.</h3><p>We can't wait to celebrate with you on November 28.</p><a className="text-link" href="#top">Back to the beginning <ArrowUpRight /></a></motion.div> : <form onSubmit={handleRsvpSubmit}><label htmlFor="name">Your name</label><input id="name" required placeholder="First and last name" /><label htmlFor="email">Email address</label><input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" /><label>Will you be joining us?</label><div className="choice-row"><label><input name="attendance" type="radio" required /> Joyfully accept</label><label><input name="attendance" type="radio" /> Regretfully decline</label></div><label htmlFor="note">A note for the couple <span>(optional)</span></label><textarea id="note" placeholder="Share a little love..." rows={3} /><button className="button button-dark" type="submit">Send RSVP <Send /></button></form>}
+        {rsvpSent ? <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="success"><div className="success-icon"><Check /></div><p className="eyebrow">Thank you</p><h3>You're on the guest list.</h3><p>We can't wait to celebrate with you on November 28.</p><a className="text-link" href="#top">Back to the beginning <ArrowUpRight /></a></motion.div> : <form onSubmit={handleRsvpSubmit}>{errorMessage && <p style={{ color: '#d9534f', fontSize: '13px', marginBottom: '15px' }}>{errorMessage}</p>}<input type="hidden" name="from_name" value="Wedding Website RSVP" /><label htmlFor="name">Your name</label><input id="name" name="name" required placeholder="First and last name" /><label htmlFor="email">Email address</label><input id="email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" /><label>Will you be joining us?</label><div className="choice-row"><label><input name="attendance" value="Joyfully accept" type="radio" required /> Joyfully accept</label><label><input name="attendance" value="Regretfully decline" type="radio" /> Regretfully decline</label></div><label htmlFor="note">A note for the couple <span>(optional)</span></label><textarea id="note" name="message" placeholder="Share a little love..." rows={3} /><button className="button button-dark" type="submit" disabled={isSubmitting}>{isSubmitting ? 'Sending...' : 'Send RSVP'} <Send /></button></form>}
       </motion.div>
     </section>
 

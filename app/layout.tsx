@@ -5,7 +5,6 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Ibitayo & Odunayo | Wedding | November 28, 2026',
   description: 'Join Ibitayo Martins Akinnibosun and Odunayo Janet Akinde as they celebrate their wedding on November 28, 2026.',
-  generator: 'v0.app',
   openGraph: {
     title: 'Ibitayo & Odunayo | Our Wedding Day',
     description: 'Two hearts. One covenant. A lifetime together.',

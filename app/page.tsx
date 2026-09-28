@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowDown, ArrowUpRight, CalendarDays, Check, ChevronDown, Clock3, Heart, MapPin, Menu, Send, X } from 'lucide-react'
 import confetti from 'canvas-confetti'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, Variants } from 'framer-motion'
 
 const eventDate = new Date('2026-11-28T11:00:00+01:00')
-const venue = 'MFM Regional Headquarters, Singer Bus Stop, Ogun State, Nigeria'
+const venue = 'Christ Apostolic Church, Mountain of Salvation, No 34, Odekale street, Ewupe, Sango Ota, Ogun state'
 
 const gallery = [
-  { src: '/wedding-hero.png', alt: 'Ibitayo and Odunayo together', label: 'The beginning' },
+  { src: '/wedding-hero.jpeg', alt: 'Ibitayo and Odunayo together', label: 'The beginning' },
   { src: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85', alt: 'Wedding rings on silk', label: 'The details' },
   { src: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=85', alt: 'Bride in an elegant wedding dress', label: 'The feeling' },
   { src: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=85', alt: 'Wedding celebration table', label: 'The celebration' },
@@ -154,7 +154,7 @@ export default function Page() {
     }
   }
 
-  const fadeUp = {
+  const fadeUp: Variants = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
   }
@@ -189,7 +189,7 @@ export default function Page() {
     </header>
 
     <section className="hero" id="top">
-      <img className="hero-image" src="/wedding-hero.png" alt="Ibitayo and Odunayo, a bride and groom in a warm editorial portrait" />
+      <img className="hero-image" src="/wedding-hero.jpeg" alt="Ibitayo and Odunayo, a bride and groom in a warm editorial portrait" />
       <div className="hero-overlay" />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, delay: 0.2 }} className="hero-content">
         <p className="eyebrow light">Together with their families</p>
@@ -221,9 +221,9 @@ export default function Page() {
       </motion.div>
     </section>
 
-    <section className="details section-pad" id="the-wedding" style={{ background: "linear-gradient(to bottom, #fcfaf7, #e9e2d9)" }}><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading centered"><p className="eyebrow">The wedding</p><h2>A day to remember,<br /><i>a love to celebrate.</i></h2></motion.div><div className="details-grid"><motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} viewport={{ once: true }} className="detail-card glassmorphism"><CalendarDays /><span>The date</span><strong>Saturday, November 28, 2026</strong></motion.div><motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} viewport={{ once: true }} className="detail-card glassmorphism"><Clock3 /><span>The time</span><strong>11:00 AM WAT</strong></motion.div><motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} viewport={{ once: true }} className="detail-card glassmorphism"><MapPin /><span>The venue</span><strong>MFM Regional Headquarters<br />Singer Bus Stop, Ogun State</strong></motion.div></div><motion.a initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: 0.5 }} viewport={{ once: true }} className="button button-dark glassmorphism-dark" href={directions} target="_blank" rel="noreferrer">Get directions <ArrowUpRight /></motion.a></section>
+    <section className="details section-pad" id="the-wedding" style={{ background: "linear-gradient(to bottom, #fcfaf7, #e9e2d9)" }}><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading centered"><p className="eyebrow">The wedding</p><h2>A day to remember,<br /><i>a love to celebrate.</i></h2></motion.div><div className="details-grid"><motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} viewport={{ once: true }} className="detail-card glassmorphism"><CalendarDays /><span>The date</span><strong>Saturday, November 28, 2026</strong></motion.div><motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} viewport={{ once: true }} className="detail-card glassmorphism"><Clock3 /><span>The time</span><strong>11:00 AM WAT</strong></motion.div><motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} viewport={{ once: true }} className="detail-card glassmorphism"><MapPin /><span>The venue</span><strong>Christ Apostolic Church, Mountain of Salvation<br />No 34, Odekale street, Ewupe, Sango Ota</strong></motion.div></div><motion.a initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: 0.5 }} viewport={{ once: true }} className="button button-dark glassmorphism-dark" href={directions} target="_blank" rel="noreferrer">Get directions <ArrowUpRight /></motion.a></section>
 
-    <section className="schedule section-pad" id="schedule"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading"><p className="eyebrow">The rhythm of the day</p><h2>Make a day<br /><i>of it.</i></h2></motion.div><div className="timeline"><motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} viewport={{ once: true }}><time>11:00 AM</time><h3>Wedding Ceremony</h3><p>MFM Regional Headquarters</p></motion.div><motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} viewport={{ once: true }} className="placeholder-event"><time>12:30 PM</time><h3>Photography & Family Moments</h3><p>Schedule details to follow</p></motion.div><motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }} viewport={{ once: true }} className="placeholder-event"><time>01:30 PM</time><h3>Reception & Celebration</h3><p>Schedule details to follow</p></motion.div></div></section>
+    <section className="schedule section-pad" id="schedule"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading"><p className="eyebrow">The rhythm of the day</p><h2>Make a day<br /><i>of it.</i></h2></motion.div><div className="timeline"><motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} viewport={{ once: true }}><time>11:00 AM</time><h3>Wedding Ceremony</h3><p>Christ Apostolic Church</p></motion.div><motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} viewport={{ once: true }} className="placeholder-event"><time>12:30 PM</time><h3>Photography & Family Moments</h3><p>Schedule details to follow</p></motion.div><motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }} viewport={{ once: true }} className="placeholder-event"><time>01:30 PM</time><h3>Reception & Celebration</h3><p>Schedule details to follow</p></motion.div></div></section>
 
     <section className="gallery-section section-pad" id="gallery"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading centered"><p className="eyebrow">A glimpse of us</p><h2>Moments, held<br /><i>in light.</i></h2></motion.div><div className="gallery-grid">{gallery.map((image, i) => <motion.button initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: i * 0.1 }} viewport={{ once: true }} className={`gallery-item item-${i + 1}`} key={image.src} onClick={() => setLightbox(i)}><img src={image.src} alt={image.alt} /><span>{image.label}<ArrowUpRight /></span></motion.button>)}</div></section>
 

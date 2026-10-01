@@ -9,7 +9,7 @@ const eventDate = new Date('2026-11-28T11:00:00+01:00')
 const venue = 'Christ Apostolic Church, Mountain of Salvation, No 34, Odekale street, Ewupe, Sango Ota, Ogun state'
 
 const gallery = [
-  { src: '/wedding-hero.jpeg', alt: 'Ibitayo and Odunayo together', label: 'The beginning' },
+  { src: '/wedding-hero.jpeg', alt: 'Odunayo and Ibitayo together', label: 'The beginning' },
   { src: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85', alt: 'Wedding rings on silk', label: 'The details' },
   { src: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=85', alt: 'Bride in an elegant wedding dress', label: 'The feeling' },
   { src: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=85', alt: 'Wedding celebration table', label: 'The celebration' },
@@ -165,7 +165,7 @@ export default function Page() {
     formData.append("access_key", "bc7db950-62ce-4a4a-b976-10557b7a18e1")
 
     // Optional: Subject line for the email
-    formData.append("subject", "New RSVP for Ibitayo & Odunayo's Wedding!")
+    formData.append("subject", "New RSVP for Odunayo & Ibitayo's Wedding!")
 
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
@@ -214,14 +214,14 @@ export default function Page() {
             className="invitation-mark"
             style={{ fontSize: '100px', color: 'var(--gold)' }}
           >
-            I <span>&</span> O
+            O <span>&</span> I
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
 
     <header className={`nav-wrap ${isScrolled ? 'scrolled' : ''}`}>
-      <a className="wordmark" href="#top" aria-label="Ibitayo and Odunayo home">I <span>&</span> O</a>
+      <a className="wordmark" href="#top" aria-label="Odunayo and Ibitayo home">O <span>&</span> I</a>
       <nav className={menuOpen ? 'nav-links open' : 'nav-links'} aria-label="Primary navigation">{nav.map(item => <a key={item} href={`#${item.toLowerCase().replaceAll(' ', '-')}`} onClick={() => setMenuOpen(false)}>{item}</a>)}<a className="nav-rsvp" href="#rsvp" onClick={() => setMenuOpen(false)}>RSVP <ArrowUpRight aria-hidden="true" /></a></nav>
       <button className="menu-button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button>
     </header>
@@ -232,7 +232,7 @@ export default function Page() {
           initial={{ scale: 1.05, filter: 'blur(10px)', opacity: 0 }}
           animate={{ scale: 1, filter: 'blur(0px)', opacity: 1 }}
           transition={{ duration: 2, ease: "easeOut" }}
-          className="hero-image" src="/wedding-hero.jpeg" alt="Ibitayo and Odunayo, a bride and groom in a warm editorial portrait"
+          className="hero-image" src="/wedding-hero.jpeg" alt="Odunayo and Ibitayo, a bride and groom in a warm editorial portrait"
         />
         <div className="hero-overlay" />
       </motion.div>
@@ -251,11 +251,11 @@ export default function Page() {
         <motion.p variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 1 } } }} className="eyebrow light">Together with their families</motion.p>
         <h1 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px 0' }}>
           <span style={{ overflow: 'hidden', display: 'block', padding: '5px 0' }}>
-            <motion.span variants={{ hidden: { y: '100%' }, visible: { y: '0%', transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } } }} style={{ display: 'block' }}>Ibitayo</motion.span>
+            <motion.span variants={{ hidden: { y: '100%' }, visible: { y: '0%', transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } } }} style={{ display: 'block' }}>Odunayo</motion.span>
           </span>
           <motion.em variants={{ hidden: { scale: 0, opacity: 0 }, visible: { scale: 1, opacity: 1, transition: { duration: 0.8, ease: "easeOut" } } }}>&</motion.em>
           <span style={{ overflow: 'hidden', display: 'block', padding: '5px 0' }}>
-            <motion.span variants={{ hidden: { y: '100%' }, visible: { y: '0%', transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } } }} style={{ display: 'block' }}>Odunayo</motion.span>
+            <motion.span variants={{ hidden: { y: '100%' }, visible: { y: '0%', transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } } }} style={{ display: 'block' }}>Ibitayo</motion.span>
           </span>
         </h1>
         <motion.p variants={{ hidden: { opacity: 0, filter: 'blur(4px)' }, visible: { opacity: 1, filter: 'blur(0px)', transition: { duration: 1 } } }} className="hero-date">28 <i>•</i> 11 <i>•</i> 2026</motion.p>
@@ -267,9 +267,9 @@ export default function Page() {
 
     <section className="countdown-section"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp}><div className="section-kicker">Counting down to forever</div><Countdown /><p className="count-note">Saturday, November 28, 2026 <span>·</span> 10:00 AM WAT</p></motion.div></section>
 
-    <section className="invitation section-pad"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="invitation-copy"><p className="eyebrow">An invitation</p><h2>Two hearts.<br /><i>One covenant.</i><br />A lifetime together.</h2><p>With grateful hearts and joyful anticipation, we invite you to witness the beginning of our forever.</p><a className="text-link" href="#the-wedding">Discover the day <ArrowUpRight /></a></motion.div><motion.div initial={{ opacity: 0, x: 50, y: 0 }} whileInView={{ opacity: 1, x: 0, y: [0, -15, 0] }} transition={{ opacity: { duration: 1 }, x: { duration: 1 }, y: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 } }} viewport={{ once: true }} className="invitation-mark">I <span>&</span> O</motion.div></section>
+    <section className="invitation section-pad"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="invitation-copy"><p className="eyebrow">An invitation</p><h2>Two hearts.<br /><i>One covenant.</i><br />A lifetime together.</h2><p>With grateful hearts and joyful anticipation, we invite you to witness the beginning of our forever.</p><a className="text-link" href="#the-wedding">Discover the day <ArrowUpRight /></a></motion.div><motion.div initial={{ opacity: 0, x: 50, y: 0 }} whileInView={{ opacity: 1, x: 0, y: [0, -15, 0] }} transition={{ opacity: { duration: 1 }, x: { duration: 1 }, y: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 } }} viewport={{ once: true }} className="invitation-mark">O <span>&</span> I</motion.div></section>
 
-    <section className="story section-pad" id="our-story"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading"><p className="eyebrow">The journey</p><h2>Our story is still<br /><i>being written.</i></h2></motion.div><div className="story-grid"><motion.div initial={{ clipPath: 'inset(100% 0 0 0)' }} whileInView={{ clipPath: 'inset(0% 0 0 0)' }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }} viewport={{ once: true, margin: "-50px" }} className="story-image"><motion.img initial={{ scale: 1.15 }} whileInView={{ scale: 1 }} transition={{ duration: 1.6, ease: "easeOut" }} viewport={{ once: true }} src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1000&q=85" alt="Couple holding hands in soft light" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></motion.div><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.2 } } }} className="story-text"><motion.span variants={fadeUp} className="story-number">01</motion.span><motion.h3 variants={fadeUp}>The beginning</motion.h3><motion.p variants={fadeUp}>What started as a chance meeting quickly blossomed into a beautiful friendship, and eventually, the love of a lifetime. Over the years, we've shared countless laughs, supported each other through every season, and built a foundation of unwavering faith and trust.</motion.p><motion.p variants={fadeUp} className="muted">Now, as we prepare to take this beautiful step together, we can't wait to celebrate the beginning of our forever with the people who mean the most to us.</motion.p><motion.div variants={fadeUp} className="line" /></motion.div></div></section>
+    <section className="story section-pad" id="our-story"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading"><p className="eyebrow">The journey</p><h2>Our story is still<br /><i>being written.</i></h2></motion.div><div className="story-grid"><motion.div initial={{ clipPath: 'inset(100% 0 0 0)' }} whileInView={{ clipPath: 'inset(0% 0 0 0)' }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }} viewport={{ once: true, margin: "-50px" }} className="story-image"><motion.img initial={{ scale: 1.15 }} whileInView={{ scale: 1 }} transition={{ duration: 1.6, ease: "easeOut" }} viewport={{ once: true }} src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1000&q=85" alt="Couple holding hands in soft light" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></motion.div><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.2 } } }} className="story-text"><motion.span variants={fadeUp} className="story-number">01</motion.span><motion.h3 variants={fadeUp}>The beginning</motion.h3><motion.p variants={fadeUp}>What started as a chance meeting quickly blossomed into a beautiful friendship, and eventually, the love of a lifetime. We've shared countless laughs, supported each other through every season, and built a foundation of unwavering faith and trust.</motion.p><motion.p variants={fadeUp} className="muted">Now, as we prepare to take this beautiful step together, we can't wait to celebrate the beginning of our forever with the people who mean the most to us.</motion.p><motion.div variants={fadeUp} className="line" /></motion.div></div></section>
 
     <section className="quote-section">
       <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="quote-inner">
@@ -327,7 +327,7 @@ export default function Page() {
 
     <section className="faq section-pad" id="faq"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading centered"><p className="eyebrow">Good to know</p><h2>Questions,<br /><i>answered.</i></h2></motion.div><div className="faq-list">{['Where is the wedding?', 'What time should guests arrive?', 'Is RSVP required?', 'Is there a dress code?'].map((question, i) => <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.1 }} viewport={{ once: true }} className="faq-row" key={question}><button onClick={() => setFaq(faq === i ? null : i)} aria-expanded={faq === i}><span>0{i + 1}</span>{question}<ChevronDown className={faq === i ? 'rotated' : ''} /></button>{faq === i && <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>{[venue, 'Guests are encouraged to arrive by 9:30 AM so we can begin the ceremony promptly.', 'Yes, please RSVP by November 1st to help us prepare for your arrival.', 'Yes! Our colors are purple and champagne gold. We can\'t wait to see you looking fabulous!'][i]}</motion.p>}</motion.div>)}</div></section>
 
-    <footer><a className="wordmark" href="#top">I <span>&</span> O</a><p>With love, gratitude & joy.</p><div className="footer-line" /><small>© 2026 Ibitayo & Odunayo · Made with love</small></footer>
+    <footer><a className="wordmark" href="#top">O <span>&</span> I</a><p>With love, gratitude & joy.</p><div className="footer-line" /><small>© 2026 Odunayo & Ibitayo · Made with love</small></footer>
     {lightbox !== null && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Gallery image" onClick={() => setLightbox(null)}><button aria-label="Close image" onClick={() => setLightbox(null)}><X /></button><img src={gallery[lightbox].src} alt={gallery[lightbox].alt} onClick={(e) => e.stopPropagation()} /></div>}
   </main>
 }

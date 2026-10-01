@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://odunayoandibitayo.com'),
   title: 'Odunayo & Ibitayo | Wedding | November 28, 2026',
   description: 'Join Odunayo Janet Akinde and Ibitayo Martins Akinnibosun as they celebrate their wedding on November 28, 2026.',
   openGraph: {

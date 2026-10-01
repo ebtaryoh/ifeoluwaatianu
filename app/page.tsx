@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { ArrowDown, ArrowUpRight, CalendarDays, Check, ChevronDown, Clock3, Heart, MapPin, Menu, Send, X } from 'lucide-react'
+import { ArrowDown, ArrowUpRight, CalendarDays, Check, ChevronDown, Clock3, Heart, MapPin, Menu, Send, X, Video, Calendar } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { motion, AnimatePresence, Variants, useScroll, useTransform } from 'framer-motion'
 
 const eventDate = new Date('2026-11-28T11:00:00+01:00')
-const venue = 'Christ Apostolic Church, Mountain of Salvation, No 34, Odekale street, Ewupe, Sango Ota, Ogun state'
-
+const venue = 'Christ Apostolic Church, Mountain of Salvation, No 34, Odekale street, Baba Barber Junction, Ewupe, Sango Ota, Ogun State'
+const calendarUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Odunayo+%26+Ibitayo%27s+Wedding&dates=20261128T090000Z/20261128T160000Z&details=Join+us+as+we+celebrate+our+wedding!&location=Christ+Apostolic+Church,+Mountain+of+Salvation,+No+34,+Odekale+street,+Baba+Barber+Junction,+Ewupe,+Sango+Ota,+Ogun+State'
 const gallery = [
   { src: '/wedding-hero.jpeg', alt: 'Odunayo and Ibitayo together', label: 'The beginning' },
   { src: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85', alt: 'Wedding rings on silk', label: 'The details' },
@@ -148,7 +148,7 @@ export default function Page() {
   }, [])
   const [faq, setFaq] = useState<number | null>(0)
   const [email, setEmail] = useState('')
-  const nav = ['Our Story', 'The Wedding', 'Schedule', 'Gallery', 'RSVP']
+  const nav = ['Our Story', 'The Wedding', 'Schedule', 'Travel', 'Gallery', 'RSVP']
   const directions = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -260,7 +260,10 @@ export default function Page() {
         </h1>
         <motion.p variants={{ hidden: { opacity: 0, filter: 'blur(4px)' }, visible: { opacity: 1, filter: 'blur(0px)', transition: { duration: 1 } } }} className="hero-date">28 <i>•</i> 11 <i>•</i> 2026</motion.p>
         <motion.p variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 1 } } }} className="hero-location">Our wedding day <span>·</span> Ogun State, Nigeria</motion.p>
-        <motion.a variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 1 } } }} className="button button-light glassmorphism-dark" href="#rsvp">Join our celebration <ArrowDown aria-hidden="true" /></motion.a>
+        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <motion.a variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 1 } } }} className="button button-light glassmorphism-dark" href="#rsvp">Join our celebration <ArrowDown aria-hidden="true" /></motion.a>
+          <motion.a variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 1 } } }} className="button button-light glassmorphism-dark" href="https://youtube.com/live" target="_blank" rel="noreferrer">Watch Live Stream <Video aria-hidden="true" /></motion.a>
+        </div>
       </motion.div>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5, duration: 1 }} className="scroll-cue"><span>Scroll to explore</span><i /></motion.div>
     </section>
@@ -304,13 +307,45 @@ export default function Page() {
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} viewport={{ once: true }} className="detail-card glassmorphism">
           <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}><MapPin /></motion.div>
           <span>The venue</span>
-          <strong>Christ Apostolic Church, Mountain of Salvation<br />No 34, Odekale street, Ewupe, Sango Ota</strong>
+          <strong>Christ Apostolic Church, Mountain of Salvation<br />No 34, Odekale street, Baba Barber Junction,<br />Ewupe, Sango Ota</strong>
         </motion.div>
       </div>
-      <motion.a initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: 0.5 }} viewport={{ once: true }} className="button button-dark glassmorphism-dark" href={directions} target="_blank" rel="noreferrer">Get directions <ArrowUpRight /></motion.a>
+      <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <motion.a initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: 0.5 }} viewport={{ once: true }} className="button button-dark glassmorphism-dark" href={directions} target="_blank" rel="noreferrer">Get directions <ArrowUpRight /></motion.a>
+        <motion.a initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: 0.6 }} viewport={{ once: true }} className="button button-dark glassmorphism-dark" href={calendarUrl} target="_blank" rel="noreferrer">Add to Calendar <Calendar /></motion.a>
+      </div>
     </section>
 
     <section className="schedule section-pad" id="schedule"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading"><p className="eyebrow">The rhythm of the day</p><h2>Make a day<br /><i>of it.</i></h2></motion.div><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.2 } } }} className="timeline"><motion.div variants={{ hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" } } }}><time>10:00 AM</time><h3>Wedding Ceremony</h3><p>Christ Apostolic Church</p></motion.div><motion.div variants={{ hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" } } }}><time>01:00 PM</time><h3>Wedding Reception</h3><p>Followed immediately by food, drinks, and joyful celebration.</p></motion.div><motion.div variants={{ hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" } } }}><time>03:30 PM</time><h3>After Party & Dancing</h3><p>Bring your dancing shoes as we celebrate into the evening.</p></motion.div></motion.div></section>
+
+    <section className="story section-pad" id="travel" style={{ background: '#eee8df' }}>
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading centered">
+        <p className="eyebrow">Travel & Stay</p>
+        <h2>For our out-of-town<br /><i>guests.</i></h2>
+      </motion.div>
+      <div style={{ maxWidth: 800, margin: '0 auto', display: 'grid', gap: '30px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+        <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="glassmorphism" style={{ padding: 40, border: '1px solid rgba(173,139,92,0.2)' }}>
+          <h3 style={{ font: "400 24px 'Playfair Display', serif", margin: "0 0 15px", color: "var(--ink)" }}>Getting Here</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.8, margin: 0 }}>
+              <strong>Driving from outside Lagos:</strong> If you are entering through Berger, connect towards Sango Ota.
+            </p>
+            <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.8, margin: 0 }}>
+              <strong>From within Lagos:</strong> Navigate to Sango, then proceed to Veepee Bus Stop. From there, you can take a bike or drive down to Baba Barber Junction—the church (CAC) is right in front of the junction.
+            </p>
+            <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.8, margin: 0 }}>
+              <strong>Flying in:</strong> The closest airport is Murtala Muhammed International Airport (LOS). Uber and Bolt are readily available.
+            </p>
+          </div>
+        </motion.div>
+        <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="glassmorphism" style={{ padding: 40, border: '1px solid rgba(173,139,92,0.2)' }}>
+          <h3 style={{ font: "400 24px 'Playfair Display', serif", margin: "0 0 15px", color: "var(--ink)" }}>Where to Stay</h3>
+          <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.8, margin: 0 }}>
+            We recommend booking a hotel in the Ikeja area (for proximity to the airport) or within Sango Ota.
+          </p>
+        </motion.div>
+      </div>
+    </section>
 
     <section className="gallery-section section-pad" id="gallery"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading centered"><p className="eyebrow">A glimpse of us</p><h2>Moments, held<br /><i>in light.</i></h2></motion.div><div className="gallery-grid">{gallery.map((image, i) => <motion.button initial={{ clipPath: 'inset(100% 0 0 0)' }} whileInView={{ clipPath: 'inset(0% 0 0 0)' }} transition={{ duration: 1, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }} viewport={{ once: true, margin: "-50px" }} className={`gallery-item item-${i + 1}`} key={image.src} onClick={() => setLightbox(i)}><motion.img initial={{ scale: 1.15 }} whileInView={{ scale: 1 }} transition={{ duration: 1.5, delay: i * 0.1, ease: "easeOut" }} viewport={{ once: true }} src={image.src} alt={image.alt} /><span>{image.label}<ArrowUpRight /></span></motion.button>)}</div></section>
 
@@ -325,7 +360,7 @@ export default function Page() {
       </motion.div>
     </section>
 
-    <section className="faq section-pad" id="faq"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading centered"><p className="eyebrow">Good to know</p><h2>Questions,<br /><i>answered.</i></h2></motion.div><div className="faq-list">{['Where is the wedding?', 'What time should guests arrive?', 'Is RSVP required?', 'Is there a dress code?'].map((question, i) => <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.1 }} viewport={{ once: true }} className="faq-row" key={question}><button onClick={() => setFaq(faq === i ? null : i)} aria-expanded={faq === i}><span>0{i + 1}</span>{question}<ChevronDown className={faq === i ? 'rotated' : ''} /></button>{faq === i && <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>{[venue, 'Guests are encouraged to arrive by 9:30 AM so we can begin the ceremony promptly.', 'Yes, please RSVP by November 1st to help us prepare for your arrival.', 'Yes! Our colors are purple and champagne gold. We can\'t wait to see you looking fabulous!'][i]}</motion.p>}</motion.div>)}</div></section>
+    <section className="faq section-pad" id="faq"><motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="section-heading centered"><p className="eyebrow">Good to know</p><h2>Questions,<br /><i>answered.</i></h2></motion.div><div className="faq-list">{['Where is the wedding?', 'What time should guests arrive?', 'Is RSVP required?', 'Is there a dress code?'].map((question, i) => <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.1 }} viewport={{ once: true }} className="faq-row" key={question}><button onClick={() => setFaq(faq === i ? null : i)} aria-expanded={faq === i}><span>0{i + 1}</span>{question}<ChevronDown className={faq === i ? 'rotated' : ''} /></button>{faq === i && <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>{[venue, 'Guests are encouraged to arrive by 9:30 AM so we can begin the ceremony promptly.', 'Yes, please RSVP by November 20th to help us prepare for your arrival.', 'Yes! Our colors are purple and champagne gold. We can\'t wait to see you looking fabulous!'][i]}</motion.p>}</motion.div>)}</div></section>
 
     <footer><a className="wordmark" href="#top">O <span>&</span> I</a><p>With love, gratitude & joy.</p><div className="footer-line" /><small>© 2026 Odunayo & Ibitayo · Made with love</small></footer>
     {lightbox !== null && <div className="lightbox" role="dialog" aria-modal="true" aria-label="Gallery image" onClick={() => setLightbox(null)}><button aria-label="Close image" onClick={() => setLightbox(null)}><X /></button><img src={gallery[lightbox].src} alt={gallery[lightbox].alt} onClick={(e) => e.stopPropagation()} /></div>}

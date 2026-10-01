@@ -212,7 +212,7 @@ export default function Page() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse', ease: "easeInOut" }}
             className="invitation-mark"
-            style={{ fontSize: '100px', color: 'var(--gold)' }}
+            style={{ fontSize: '100px', color: 'var(--gold)', alignSelf: 'center' }}
           >
             O <span>&</span> I
           </motion.div>

@@ -10,13 +10,13 @@ export const metadata: Metadata = {
     title: 'Odunayo & Ibitayo | Our Wedding Day',
     description: 'Two hearts. One covenant. A lifetime together.',
     type: 'website',
-    images: ['/images/Third.png'],
+    images: ['/images/romantic-blue-and-gold-embrace.png'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Odunayo & Ibitayo | Our Wedding Day',
     description: 'November 28, 2026 · Ogun State, Nigeria',
-    images: ['/images/Third.png'],
+    images: ['/images/romantic-blue-and-gold-embrace.png'],
   },
   icons: {
     icon: '/icon.svg',

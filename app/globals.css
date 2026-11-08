@@ -1217,6 +1217,210 @@ footer p {
   }
   .lightbox-nav-btn.prev { left: 10px; }
   .lightbox-nav-btn.next { right: 10px; }
+
+  .gifts-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .bank-card-number {
+    font-size: 21px;
+    letter-spacing: 0.1em;
+  }
+  .intl-pill-grid {
+    grid-template-columns: 1fr;
+  }
+  .wishes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Gifts & Registry Section */
+.gifts-section {
+  background: var(--paper);
+  position: relative;
+}
+.gifts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.bank-card-container {
+  background: linear-gradient(135deg, #1f1b16 0%, #352d24 100%);
+  color: #fff;
+  border-radius: 20px;
+  padding: 36px 30px;
+  border: 1px solid rgba(212, 175, 124, 0.4);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 290px;
+  position: relative;
+  overflow: hidden;
+}
+.bank-card-chip {
+  width: 44px;
+  height: 34px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #d4af7c 0%, #ad8b5c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  margin-bottom: 22px;
+}
+.bank-card-title {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-bottom: 6px;
+}
+.bank-card-number {
+  font-family: 'DM Sans', monospace;
+  font-size: 27px;
+  letter-spacing: 0.14em;
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 16px;
+}
+.bank-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 16px;
+  margin-top: 10px;
+}
+.copy-account-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 8px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.copy-account-btn:hover {
+  background: var(--gold-light);
+  color: var(--ink);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(173, 139, 92, 0.4);
+}
+.intl-card {
+  padding: 36px 30px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.intl-pill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+.intl-pill-item {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(173, 139, 92, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.intl-pill-item:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+.intl-pill-name {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.intl-pill-desc {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Wishes / Guestbook Section */
+.wishes-section {
+  background: #ede6dc;
+  position: relative;
+}
+.wishes-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.wishes-form-card {
+  max-width: 680px;
+  margin: 0 auto 50px;
+  padding: 36px 32px;
+  border: 1px solid rgba(173, 139, 92, 0.25);
+}
+.wishes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+.wish-card {
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 16px;
+  border: 1px solid rgba(173, 139, 92, 0.22);
+  background: rgba(252, 250, 247, 0.88);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.wish-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.07);
+  border-color: rgba(173, 139, 92, 0.45);
+}
+.wish-card-text {
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink);
+  margin: 0 0 18px;
+}
+.wish-card-author {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(173, 139, 92, 0.18);
+  padding-top: 14px;
+}
+.heart-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid rgba(173, 139, 92, 0.3);
+  padding: 5px 10px;
+  border-radius: 9999px;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.heart-button:hover, .heart-button.active {
+  background: #fbeee8;
+  border-color: #e07a5f;
+  color: #e07a5f;
 }
 
 @media (prefers-reduced-motion: reduce) {

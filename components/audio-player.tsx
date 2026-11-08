@@ -1,8 +1,26 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Disc3, Music, Pause, Play, Volume2, VolumeX } from 'lucide-react'
+import { Disc3, Music, Pause, Play, Volume2, VolumeX, X } from 'lucide-react'
+
+// Web Audio API session unlock for iOS Safari and mobile WebKit
+function unlockWebAudio() {
+  try {
+    const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext
+    if (AudioCtxClass) {
+      const ctx = new AudioCtxClass()
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {})
+      }
+      const buffer = ctx.createBuffer(1, 1, 22050)
+      const source = ctx.createBufferSource()
+      source.buffer = buffer
+      source.connect(ctx.destination)
+      source.start(0)
+    }
+  } catch {}
+}
 
 export function AudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -10,64 +28,124 @@ export function AudioPlayer() {
   const [isMuted, setIsMuted] = useState(false)
   const [autoplayBlocked, setAutoplayBlocked] = useState(false)
   const [hasStartedOnce, setHasStartedOnce] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
 
-  useEffect(() => {
+  // Direct unmuted playback attempt
+  const attemptPlay = useCallback(async () => {
     const audio = audioRef.current
-    if (!audio) return
+    if (!audio) return false
 
+    unlockWebAudio()
+    audio.muted = false
     audio.volume = 0.65
 
-    // Attempt direct autoplay
-    const startAudio = async () => {
+    try {
+      await audio.play()
+      setIsPlaying(true)
+      setAutoplayBlocked(false)
+      setHasStartedOnce(true)
+      return true
+    } catch {
+      // Unmuted autoplay blocked by browser policy on live domain
+      // Warm up audio buffer with muted playback so it buffers with 0 latency
       try {
+        audio.muted = true
         await audio.play()
-        setIsPlaying(true)
-        setAutoplayBlocked(false)
-        setHasStartedOnce(true)
-      } catch {
-        // Browser blocked unmuted autoplay without prior interaction
-        setAutoplayBlocked(true)
-        setIsPlaying(false)
-      }
-    }
-
-    startAudio()
-
-    // Fallback: start on the very first user interaction anywhere on the screen
-    const handleFirstUserGesture = () => {
-      if (audio && audio.paused) {
-        audio.play().then(() => {
-          setIsPlaying(true)
-          setAutoplayBlocked(false)
-          setHasStartedOnce(true)
-        }).catch(() => {})
-      }
-      cleanupListeners()
-    }
-
-    const events = ['click', 'touchstart', 'scroll', 'keydown', 'pointerdown']
-    const cleanupListeners = () => {
-      events.forEach((evt) => window.removeEventListener(evt, handleFirstUserGesture))
-    }
-
-    events.forEach((evt) => {
-      window.addEventListener(evt, handleFirstUserGesture, { once: true, passive: true })
-    })
-
-    return () => {
-      cleanupListeners()
+      } catch {}
+      setAutoplayBlocked(true)
+      return false
     }
   }, [])
 
-  const togglePlay = () => {
+  // User gesture handler (unmutes & starts)
+  const handleUserGesture = useCallback(async () => {
     const audio = audioRef.current
     if (!audio) return
+
+    unlockWebAudio()
+    audio.muted = false
+    audio.volume = 0.65
+
+    try {
+      await audio.play()
+      setIsPlaying(true)
+      setAutoplayBlocked(false)
+      setHasStartedOnce(true)
+    } catch {
+      // Keep waiting for subsequent valid user interaction
+    }
+  }, [])
+
+  useEffect(() => {
+    // 1. Attempt unmuted autoplay immediately on mount
+    attemptPlay()
+
+    // 2. Register global user gesture listeners on window and document
+    const gestureEvents = ['pointerdown', 'touchstart', 'touchend', 'click', 'keydown']
+
+    const gestureListener = () => {
+      handleUserGesture()
+    }
+
+    gestureEvents.forEach((evt) => {
+      window.addEventListener(evt, gestureListener, { capture: true, passive: true })
+      document.addEventListener(evt, gestureListener, { capture: true, passive: true })
+    })
+
+    // 3. Listen for custom 'play-wedding-music' event dispatched by splash screen or buttons
+    const customListener = () => {
+      handleUserGesture()
+    }
+    window.addEventListener('play-wedding-music', customListener)
+
+    // 4. Expose to global window
+    if (typeof window !== 'undefined') {
+      ;(window as any).__playWeddingMusic = handleUserGesture
+    }
+
+    // 5. Visibility change handler: resume if user switches back to tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && hasStartedOnce && !isMuted) {
+        if (audioRef.current && audioRef.current.paused) {
+          audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      gestureEvents.forEach((evt) => {
+        window.removeEventListener(evt, gestureListener, { capture: true })
+        document.removeEventListener(evt, gestureListener, { capture: true })
+      })
+      window.removeEventListener('play-wedding-music', customListener)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [attemptPlay, handleUserGesture, hasStartedOnce, isMuted])
+
+  // Auto-dismiss the prompt banner after 5 seconds so it doesn't obstruct content
+  useEffect(() => {
+    if (autoplayBlocked && !hasStartedOnce) {
+      const timer = setTimeout(() => {
+        setBannerDismissed(true)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [autoplayBlocked, hasStartedOnce])
+
+  const togglePlay = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    const audio = audioRef.current
+    if (!audio) return
+
+    unlockWebAudio()
 
     if (isPlaying) {
       audio.pause()
       setIsPlaying(false)
     } else {
+      audio.muted = false
+      audio.volume = 0.65
       audio.play().then(() => {
         setIsPlaying(true)
         setAutoplayBlocked(false)
@@ -86,6 +164,11 @@ export function AudioPlayer() {
     setIsMuted(!isMuted)
   }
 
+  const dismissBanner = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setBannerDismissed(true)
+  }
+
   return (
     <>
       <audio
@@ -94,42 +177,52 @@ export function AudioPlayer() {
         preload="auto"
         loop
         playsInline
+        onEnded={() => {
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0
+            audioRef.current.play().catch(() => {})
+          }
+        }}
       >
         <source src="/audio/wedding-song.mp3" type="audio/mpeg" />
         <source src="/audio/wedding-song.mpeg" type="audio/mpeg" />
       </audio>
 
       {/* Floating Audio Controller */}
-      <div className="audio-controller-container" style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 90 }}>
+      <div className="audio-controller-container">
         {/* Floating blocked notification banner */}
         <AnimatePresence>
-          {autoplayBlocked && !hasStartedOnce && (
-            <motion.button
-              onClick={togglePlay}
+          {autoplayBlocked && !hasStartedOnce && !bannerDismissed && (
+            <motion.div
               initial={{ opacity: 0, y: 15, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.35 }}
               className="music-prompt-banner glassmorphism-dark"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '10px 16px',
-                marginBottom: '10px',
-                color: '#fff',
-                fontSize: '11px',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                borderRadius: '50px',
-                cursor: 'pointer',
-                border: '1px solid rgba(173, 139, 92, 0.4)',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
-              }}
+              onClick={togglePlay}
             >
-              <Music className="w-3.5 h-3.5 text-[#ad8b5c] animate-pulse" />
-              <span>Tap to Play Wedding Song ♫</span>
-            </motion.button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Music className="w-3.5 h-3.5 text-[#d4af7c] animate-pulse" />
+                <span>Tap to Play Wedding Song ♫</span>
+              </div>
+              <button
+                type="button"
+                onClick={dismissBanner}
+                aria-label="Dismiss banner"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'rgba(255,255,255,0.7)',
+                  padding: '2px',
+                  display: 'grid',
+                  placeItems: 'center',
+                  cursor: 'pointer',
+                  marginLeft: '4px',
+                }}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -137,39 +230,14 @@ export function AudioPlayer() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
           className="music-player-pill glassmorphism"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '8px 14px 8px 8px',
-            borderRadius: '9999px',
-            boxShadow: '0 12px 35px rgba(0, 0, 0, 0.15)',
-            border: '1px solid rgba(173, 139, 92, 0.35)',
-            background: 'rgba(252, 250, 247, 0.92)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-          }}
         >
           {/* Rotating Vinyl Record */}
           <button
             onClick={togglePlay}
             aria-label={isPlaying ? 'Pause wedding soundtrack' : 'Play wedding soundtrack'}
-            style={{
-              position: 'relative',
-              width: '42px',
-              height: '42px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #1c1814, #362f28)',
-              display: 'grid',
-              placeItems: 'center',
-              border: '2px solid var(--gold)',
-              cursor: 'pointer',
-              padding: 0,
-              boxShadow: isPlaying ? '0 0 15px rgba(173, 139, 92, 0.4)' : 'none',
-              transition: 'box-shadow 0.3s ease',
-            }}
+            className="music-vinyl-btn"
           >
             <motion.div
               animate={{ rotate: isPlaying ? 360 : 0 }}
@@ -188,7 +256,7 @@ export function AudioPlayer() {
                 placeItems: 'center',
                 background: 'rgba(0,0,0,0.3)',
                 borderRadius: '50%',
-                opacity: isPlaying ? 0 : 0.8,
+                opacity: isPlaying ? 0 : 0.85,
                 transition: 'opacity 0.2s',
               }}
             >
@@ -197,31 +265,13 @@ export function AudioPlayer() {
           </button>
 
           {/* Song Info & Equalizer */}
-          <div
-            onClick={togglePlay}
-            style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer', minWidth: '95px' }}
-          >
+          <div onClick={togglePlay} className="music-info">
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: 'var(--ink)',
-                  letterSpacing: '0.02em',
-                }}
-              >
+              <span className="music-title">
                 For Life
               </span>
               {/* Equalizer Bars */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  gap: '2px',
-                  height: '12px',
-                }}
-              >
+              <div className="music-eq">
                 {[1, 2, 3, 4].map((bar) => (
                   <motion.span
                     key={bar}
@@ -244,34 +294,17 @@ export function AudioPlayer() {
                 ))}
               </div>
             </div>
-            <span
-              style={{
-                fontSize: '9.5px',
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color: 'var(--muted)',
-                fontWeight: 500,
-              }}
-            >
+            <span className="music-sub">
               {isPlaying ? 'Now Playing · O & I' : 'Click to Play'}
             </span>
           </div>
 
           {/* Control Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div className="music-controls">
             <button
               onClick={togglePlay}
               aria-label={isPlaying ? 'Pause' : 'Play'}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--ink)',
-                padding: '6px',
-                borderRadius: '50%',
-                display: 'grid',
-                placeItems: 'center',
-                cursor: 'pointer',
-              }}
+              className="music-action-btn"
             >
               {isPlaying ? <Pause className="w-4 h-4 text-[var(--ink)]" /> : <Play className="w-4 h-4 text-[var(--gold)] fill-[var(--gold)]" />}
             </button>
@@ -279,16 +312,7 @@ export function AudioPlayer() {
             <button
               onClick={toggleMute}
               aria-label={isMuted ? 'Unmute' : 'Mute'}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--muted)',
-                padding: '6px',
-                borderRadius: '50%',
-                display: 'grid',
-                placeItems: 'center',
-                cursor: 'pointer',
-              }}
+              className="music-action-btn"
             >
               {isMuted ? <VolumeX className="w-4 h-4 text-red-500" /> : <Volume2 className="w-4 h-4" />}
             </button>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import {
   ArrowDown,
   ArrowUpRight,
@@ -16,7 +16,10 @@ import {
   MapPin,
   Maximize2,
   Menu,
+  MessageCircle,
   MessageSquareHeart,
+  Music,
+  PhoneCall,
   Send,
   Sparkles,
   Video,
@@ -181,7 +184,7 @@ export default function Page() {
   const [galleryFilter, setGalleryFilter] = useState<'all' | 'traditional' | 'modern' | 'faith'>('all')
 
   // Bank Copy State
-  const [copiedAccount, setCopiedAccount] = useState(false)
+  const [copiedAccount, setCopiedAccount] = useState<'sterling' | 'gtb' | null>(null)
 
   // Wishes / Guestbook States
   const [wishes, setWishes] = useState<Wish[]>([
@@ -217,6 +220,7 @@ export default function Page() {
   const [isSubmittingWish, setIsSubmittingWish] = useState(false)
   const [wishSuccess, setWishSuccess] = useState(false)
   const [likedWishes, setLikedWishes] = useState<Record<string, boolean>>({})
+  const [visibleWishesCount, setVisibleWishesCount] = useState(5)
 
   // Load saved wishes from API or LocalStorage
   useEffect(() => {
@@ -232,14 +236,14 @@ export default function Page() {
         try {
           const local = localStorage.getItem('wedding_wishes')
           if (local) setWishes(JSON.parse(local))
-        } catch {}
+        } catch { }
       })
   }, [])
 
-  const handleCopyAccount = () => {
-    navigator.clipboard.writeText('0088927432')
-    setCopiedAccount(true)
-    setTimeout(() => setCopiedAccount(false), 3000)
+  const handleCopyAccount = (accountNumber: string, type: 'sterling' | 'gtb') => {
+    navigator.clipboard.writeText(accountNumber)
+    setCopiedAccount(type)
+    setTimeout(() => setCopiedAccount(null), 3000)
   }
 
   const handleWishSubmit = async (e: React.FormEvent) => {
@@ -275,7 +279,7 @@ export default function Page() {
         const updated = [newWish, ...prev]
         try {
           localStorage.setItem('wedding_wishes', JSON.stringify(updated))
-        } catch {}
+        } catch { }
         return updated
       })
     } finally {
@@ -333,24 +337,37 @@ export default function Page() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [lightbox, filteredGallery.length])
 
+  const enterCelebration = useCallback(() => {
+    // 1. Dispatch custom play event to unlock audio
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('play-wedding-music'))
+        ; (window as any).__playWeddingMusic?.()
+    }
+
+    // 2. Dismiss loading screen immediately
+    setIsAppLoading(false)
+
+    // 3. Fire celebratory wedding confetti
+    confetti({
+      particleCount: 160,
+      spread: 100,
+      origin: { y: 0.4 },
+      colors: ['#ad8b5c', '#d8cfc3', '#fcfaf7', '#2d2925'],
+      disableForReducedMotion: true,
+      zIndex: 100,
+    })
+  }, [])
+
   useEffect(() => {
     let frameId: number
     let isActive = false
 
+    // Auto-enter after 2.8s if user hasn't tapped yet
     const timer = setTimeout(() => {
-      setIsAppLoading(false)
+      enterCelebration()
       isActive = true
 
       const colors = ['#ad8b5c', '#d8cfc3', '#fcfaf7', '#2d2925']
-
-      confetti({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.4 },
-        colors: colors,
-        disableForReducedMotion: true,
-        zIndex: 100,
-      })
 
       function randomInRange(min: number, max: number) {
         return Math.random() * (max - min) + min
@@ -359,42 +376,42 @@ export default function Page() {
       let skew = 1
       let lastTime = Date.now()
 
-      ;(function frame() {
-        if (!isActive) return
+        ; (function frame() {
+          if (!isActive) return
 
-        frameId = requestAnimationFrame(frame)
+          frameId = requestAnimationFrame(frame)
 
-        const now = Date.now()
-        if (now - lastTime < 400) return
-        lastTime = now
+          const now = Date.now()
+          if (now - lastTime < 400) return
+          lastTime = now
 
-        skew = Math.max(0.8, skew - 0.001)
+          skew = Math.max(0.8, skew - 0.001)
 
-        confetti({
-          particleCount: 1,
-          startVelocity: 0,
-          ticks: 800,
-          origin: {
-            x: Math.random(),
-            y: Math.random() * skew - 0.2,
-          },
-          colors: colors,
-          shapes: ['circle'],
-          gravity: randomInRange(0.1, 0.2),
-          scalar: randomInRange(0.4, 0.9),
-          drift: randomInRange(-0.2, 0.2),
-          disableForReducedMotion: true,
-          zIndex: 100,
-        })
-      })()
-    }, 2200)
+          confetti({
+            particleCount: 1,
+            startVelocity: 0,
+            ticks: 800,
+            origin: {
+              x: Math.random(),
+              y: Math.random() * skew - 0.2,
+            },
+            colors: colors,
+            shapes: ['circle'],
+            gravity: randomInRange(0.1, 0.2),
+            scalar: randomInRange(0.4, 0.9),
+            drift: randomInRange(-0.2, 0.2),
+            disableForReducedMotion: true,
+            zIndex: 100,
+          })
+        })()
+    }, 2800)
 
     return () => {
       clearTimeout(timer)
       isActive = false
       if (frameId) cancelAnimationFrame(frameId)
     }
-  }, [])
+  }, [enterCelebration])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -418,7 +435,7 @@ export default function Page() {
       {/* Background Audio Player with Autoplay & Floating Luxury Controls */}
       <AudioPlayer />
 
-      {/* Initial Page Loading Overlay */}
+      {/* Initial Page Loading Overlay with Tap-to-Enter Audio Unlock */}
       <AnimatePresence>
         {isAppLoading && (
           <motion.div
@@ -426,23 +443,72 @@ export default function Page() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8, ease: 'easeInOut' }}
+            onClick={enterCelebration}
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 100,
-              background: 'var(--cream)',
-              display: 'grid',
-              placeItems: 'center',
+              background: 'radial-gradient(ellipse at center, #2e261f 0%, #16120e 100%)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              cursor: 'pointer',
+              color: '#fff',
+              padding: '24px',
+              textAlign: 'center',
             }}
           >
             <motion.div
               initial={{ opacity: 0.5, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+              transition={{ duration: 1.2, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
               className="invitation-mark"
-              style={{ fontSize: '100px', color: 'var(--gold)', alignSelf: 'center' }}
+              style={{ fontSize: 'clamp(64px, 14vw, 100px)', color: 'var(--gold)', marginBottom: '14px' }}
             >
               O <span>&</span> I
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.7 }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
+            >
+              <span style={{ font: "italic 22px 'Playfair Display', serif", color: '#fff', letterSpacing: '0.04em' }}>
+                Odunayo &amp; Ibitayo
+              </span>
+              <span style={{ fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: '0.22em', color: 'var(--gold-light)' }}>
+                The Wedding Celebration · November 2026
+              </span>
+
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  marginTop: '28px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '11px 24px',
+                  borderRadius: '50px',
+                  background: 'rgba(212, 175, 124, 0.16)',
+                  border: '1px solid rgba(212, 175, 124, 0.55)',
+                  color: '#fff',
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.14em',
+                  fontWeight: 600,
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+                }}
+              >
+                <Music className="w-3.5 h-3.5 text-[#d4af7c] animate-pulse" />
+                <span>Open Invitation ♫</span>
+              </motion.div>
+
+              <span style={{ marginTop: '14px', fontSize: '9.5px', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                Tap anywhere to enter with music
+              </span>
             </motion.div>
           </motion.div>
         )}
@@ -808,6 +874,17 @@ export default function Page() {
           >
             Add to Calendar <Calendar />
           </motion.a>
+          <motion.a
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            viewport={{ once: true }}
+            className="button button-dark glassmorphism-dark"
+            href="tel:07037008505"
+            title="Call Olamide for directions or enquiries"
+          >
+            Call for directions <PhoneCall className="w-4 h-4 text-[#d4af7c]" />
+          </motion.a>
         </div>
       </section>
 
@@ -931,62 +1008,132 @@ export default function Page() {
         </motion.div>
 
         <div className="gifts-grid">
-          {/* Nigerian Bank Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="bank-card-container"
-          >
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div className="bank-card-chip" />
-                <span style={{ font: "italic 22px 'Playfair Display', serif", color: 'var(--gold-light)' }}>
-                  Sterling
+          {/* Nigerian Bank Cards Column (Bride First, then Groom) */}
+          <div className="gifts-accounts-col">
+            {/* Bride's Account: GTBank (Guaranty Trust Bank) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="bank-card-container gtb-card"
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <div className="bank-card-chip gtb-chip" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="account-tag gtb-tag">Bride&apos;s Account</span>
+                    <span style={{ font: "italic 22px 'Playfair Display', serif", color: '#ffb380' }}>
+                      GTBank
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bank-card-title">Bank Name</div>
+                <div style={{ fontSize: '18px', fontWeight: 600, color: '#fff', letterSpacing: '0.03em' }}>
+                  Guaranty Trust Bank (GTB)
+                </div>
+
+                <div className="bank-card-title" style={{ marginTop: '16px' }}>
+                  Account Number
+                </div>
+                <div className="bank-card-number">
+                  0142301947
+                </div>
+
+                <div className="bank-card-title">Account Name</div>
+                <div style={{ fontSize: '16px', fontWeight: 600, color: '#fbeee6', letterSpacing: '0.02em' }}>
+                  Odunayo Akinde Janet
+                </div>
+              </div>
+
+              <div className="bank-card-footer">
+                <span style={{ fontSize: '11px', color: '#c7b2a6', letterSpacing: '0.06em' }}>
+                  Currency: NGN (Naira) · Bride
                 </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopyAccount('0142301947', 'gtb')}
+                  className="copy-account-btn gtb-copy-btn"
+                  aria-label="Copy GTBank account number"
+                >
+                  {copiedAccount === 'gtb' ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-300" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copy Number</span>
+                    </>
+                  )}
+                </button>
               </div>
-              <div className="bank-card-title">Bank Name</div>
-              <div style={{ fontSize: '19px', fontWeight: 600, color: '#fff', letterSpacing: '0.04em' }}>
-                Sterling Bank
+            </motion.div>
+
+            {/* Groom's Account: Sterling Bank */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.15 }}
+              viewport={{ once: true }}
+              className="bank-card-container"
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <div className="bank-card-chip" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="account-tag">Groom&apos;s Account</span>
+                    <span style={{ font: "italic 22px 'Playfair Display', serif", color: 'var(--gold-light)' }}>
+                      Sterling
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bank-card-title">Bank Name</div>
+                <div style={{ fontSize: '18px', fontWeight: 600, color: '#fff', letterSpacing: '0.03em' }}>
+                  Sterling Bank
+                </div>
+
+                <div className="bank-card-title" style={{ marginTop: '16px' }}>
+                  Account Number
+                </div>
+                <div className="bank-card-number">
+                  0088927432
+                </div>
+
+                <div className="bank-card-title">Account Name</div>
+                <div style={{ fontSize: '16px', fontWeight: 600, color: '#f3ece3', letterSpacing: '0.02em' }}>
+                  Akinnibosun Ibitayo
+                </div>
               </div>
 
-              <div className="bank-card-title" style={{ marginTop: '18px' }}>
-                Account Number
+              <div className="bank-card-footer">
+                <span style={{ fontSize: '11px', color: '#b8aba0', letterSpacing: '0.06em' }}>
+                  Currency: NGN (Naira) · Groom
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopyAccount('0088927432', 'sterling')}
+                  className="copy-account-btn"
+                  aria-label="Copy Sterling Bank account number"
+                >
+                  {copiedAccount === 'sterling' ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-300" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copy Number</span>
+                    </>
+                  )}
+                </button>
               </div>
-              <div className="bank-card-number">
-                0088927432
-              </div>
-
-              <div className="bank-card-title">Account Name</div>
-              <div style={{ fontSize: '17px', fontWeight: 600, color: '#f3ece3', letterSpacing: '0.02em' }}>
-                Akinnibosun Ibitayo
-              </div>
-            </div>
-
-            <div className="bank-card-footer">
-              <span style={{ fontSize: '11px', color: '#b8aba0', letterSpacing: '0.08em' }}>
-                Currency: NGN (Naira)
-              </span>
-              <button
-                onClick={handleCopyAccount}
-                className="copy-account-btn"
-                aria-label="Copy account number"
-              >
-                {copiedAccount ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-300" />
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    <span>Copy Number</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
           {/* International Guests Guide (USA, UK, Canada, Australia) */}
           <motion.div
@@ -1005,7 +1152,7 @@ export default function Page() {
                 USA, UK, Canada & Australia
               </h3>
               <p style={{ color: 'var(--muted)', fontSize: '13px', lineHeight: 1.7, margin: 0 }}>
-                Guests abroad can pay directly into the Sterling Bank account in seconds at live bank exchange rates using any of these trusted remittance apps:
+                Guests abroad can pay directly into either the GTBank or Sterling Bank account in seconds at live bank exchange rates using any of these trusted remittance apps:
               </p>
 
               <div className="intl-pill-grid">
@@ -1015,7 +1162,7 @@ export default function Page() {
                 </div>
                 <div className="intl-pill-item">
                   <span className="intl-pill-name">Remitly</span>
-                  <span className="intl-pill-desc">USA, UK, Australia, Canada · Direct Sterling deposit</span>
+                  <span className="intl-pill-desc">USA, UK, Australia, Canada · Direct deposit to GTB / Sterling</span>
                 </div>
                 <div className="intl-pill-item">
                   <span className="intl-pill-name">Sendwave</span>
@@ -1023,14 +1170,14 @@ export default function Page() {
                 </div>
                 <div className="intl-pill-item">
                   <span className="intl-pill-name">WorldRemit</span>
-                  <span className="intl-pill-desc">Australia, UK, USA · Bank transfer to Sterling Bank</span>
+                  <span className="intl-pill-desc">Australia, UK, USA · Bank transfer to GTB or Sterling</span>
                 </div>
               </div>
             </div>
 
-            <div style={{ background: 'rgba(173, 139, 92, 0.1)', padding: '12px 16px', borderRadius: '10px', border: '1px solid rgba(173, 139, 92, 0.25)' }}>
-              <p style={{ fontSize: '11.5px', color: 'var(--ink)', margin: 0, lineHeight: 1.6 }}>
-                <strong>Easy 2-Minute Steps:</strong> Open your app → Select <strong>Nigeria</strong> → Choose <strong>Bank Transfer</strong> → Select <strong>Sterling Bank</strong> → Enter Account: <strong>0088927432</strong> (Akinnibosun Ibitayo).
+            <div style={{ background: 'rgba(173, 139, 92, 0.1)', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(173, 139, 92, 0.25)' }}>
+              <p style={{ fontSize: '12px', color: 'var(--ink)', margin: 0, lineHeight: 1.65 }}>
+                <strong>Easy 2-Minute Steps:</strong> Open your remittance app → Select <strong>Nigeria</strong> → Choose <strong>Bank Transfer</strong> → Select either <strong>GTBank</strong> (0142301947 · Odunayo Akinde Janet) or <strong>Sterling Bank</strong> (0088927432 · Akinnibosun Ibitayo). Transfers arrive immediately!
               </p>
             </div>
           </motion.div>
@@ -1169,14 +1316,14 @@ export default function Page() {
             </form>
           </motion.div>
 
-          {/* Published Wishes Wall */}
+          {/* Published Wishes Wall (Paginated: 5 at a time) */}
           <div className="wishes-grid">
-            {wishes.map((item, index) => (
+            {wishes.slice(0, visibleWishesCount).map((item, index) => (
               <motion.div
                 key={item.id || index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.05 }}
+                transition={{ duration: 0.5, delay: (index % 5) * 0.08 }}
                 viewport={{ once: true }}
                 className="wish-card"
               >
@@ -1210,6 +1357,61 @@ export default function Page() {
               </motion.div>
             ))}
           </div>
+
+          {/* Read More / Next 5 Wishes Pagination Button */}
+          {wishes.length > 5 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', marginTop: '36px' }}>
+              {visibleWishesCount < wishes.length ? (
+                <button
+                  type="button"
+                  onClick={() => setVisibleWishesCount((prev) => prev + 5)}
+                  className="button button-dark"
+                  style={{
+                    padding: '13px 30px',
+                    borderRadius: '50px',
+                    fontSize: '11px',
+                    letterSpacing: '0.14em',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    cursor: 'pointer',
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.12)',
+                  }}
+                >
+                  <span>Read More Wishes ({Math.min(5, wishes.length - visibleWishesCount)} more)</span>
+                  <ChevronDown className="w-4 h-4 text-[#d4af7c]" />
+                </button>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--muted)', fontStyle: 'italic' }}>
+                    You&apos;ve read all {wishes.length} blessings ❤️
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVisibleWishesCount(5)
+                      const el = document.getElementById('wishes')
+                      if (el) el.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                    className="button button-light"
+                    style={{
+                      padding: '8px 18px',
+                      borderRadius: '50px',
+                      fontSize: '10px',
+                      color: 'var(--ink)',
+                      borderColor: 'rgba(173,139,92,0.4)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Show First 5
+                  </button>
+                </div>
+              )}
+              <span style={{ fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.06em' }}>
+                Showing {Math.min(visibleWishesCount, wishes.length)} of {wishes.length} blessings
+              </span>
+            </div>
+          )}
         </div>
       </section>
 
@@ -1244,6 +1446,64 @@ export default function Page() {
               We recommend booking a hotel in the Ikeja area (ideal for airport transit and shopping) or reputable accommodations within Sango Ota for ease of morning arrival.
             </p>
           </motion.div>
+
+          {/* Location & Enquiries Direct Contact Card */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="glassmorphism"
+            style={{
+              gridColumn: '1 / -1',
+              padding: '30px 32px',
+              border: '1px solid rgba(173,139,92,0.3)',
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(247,242,235,0.95) 100%)',
+              borderRadius: '18px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '20px',
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <PhoneCall className="w-4 h-4 text-[#ad8b5c]" />
+                <span className="eyebrow" style={{ margin: 0 }}>Location &amp; Enquiries</span>
+              </div>
+              <h3 style={{ font: "400 22px 'Playfair Display', serif", margin: '0 0 6px', color: 'var(--ink)' }}>
+                Need Directions or Assistance on the Day?
+              </h3>
+              <p style={{ color: 'var(--muted)', fontSize: '13.5px', margin: 0, lineHeight: 1.6 }}>
+                For landmark assistance from Veepee / Baba Barber Junction or any enquiries, please call:
+                <br />
+                <strong style={{ color: 'var(--ink)', fontSize: '15px' }}>Olamide</strong> ·{' '}
+                <a href="tel:07037008505" style={{ color: 'var(--gold)', fontWeight: 700, letterSpacing: '0.04em', textDecoration: 'none' }}>
+                  07037008505
+                </a>
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <a
+                href="tel:07037008505"
+                className="button button-dark"
+                style={{ padding: '12px 20px', borderRadius: '8px', fontSize: '11px', textDecoration: 'none' }}
+              >
+                <PhoneCall className="w-4 h-4 text-[#d4af7c]" /> Call 07037008505
+              </a>
+              <a
+                href="https://wa.me/2347037008505?text=Hello%20Olamide%2C%20I%20am%20calling%2Fmessaging%20regarding%20directions%20to%20Odunayo%20and%20Ibitayo%27s%20wedding"
+                target="_blank"
+                rel="noreferrer"
+                className="button button-light"
+                style={{ padding: '12px 18px', borderRadius: '8px', fontSize: '11px', color: 'var(--ink)', borderColor: 'rgba(173,139,92,0.4)', textDecoration: 'none' }}
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-600" /> WhatsApp Olamide
+              </a>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1262,6 +1522,7 @@ export default function Page() {
             'Where is the wedding?',
             'What time should guests arrive?',
             'How can I send my wedding gift or contribution?',
+            'Who can I call for directions or enquiries?',
             'Is there a dress code / colors of the day?',
           ].map((question, i) => (
             <motion.div
@@ -1282,8 +1543,9 @@ export default function Page() {
                   {[
                     venue,
                     'Please note our prompt timing: Engagement & Traditional Wedding begins at 8:00 AM Prompt, followed by the Church Wedding Ceremony at 10:00 AM Prompt.',
-                    'You can transfer directly to Sterling Bank, Account Number: 0088927432 (Akinnibosun Ibitayo). Guests from abroad can send via LemFi, Remitly, Sendwave, or WorldRemit.',
-                    'Our colors of the day are royal blue and champagne gold. We cannot wait to see you looking magnificent!',
+                    'You can transfer directly to either Sterling Bank (0088927432 · Akinnibosun Ibitayo) or GTBank (0142301947 · Odunayo Akinde Janet). Guests from abroad can send seamlessly via LemFi, Remitly, Sendwave, or WorldRemit.',
+                    'For real-time directions, landmarks in Sango Ota, or any wedding day enquiries, please call Olamide on 07037008505.',
+                    'Our colors of the day are Purple and champagne gold. We cannot wait to see you looking magnificent!',
                   ][i]}
                 </motion.p>
               )}
@@ -1298,6 +1560,12 @@ export default function Page() {
           O <span>&</span> I
         </a>
         <p>With love, gratitude & joy.</p>
+        <div style={{ marginTop: '14px', fontSize: '12px', color: '#cfc4b6' }}>
+          For directions &amp; enquiries on the day: Call <strong>Olamide</strong> on{' '}
+          <a href="tel:07037008505" style={{ color: 'var(--gold-light)', textDecoration: 'underline' }}>
+            07037008505
+          </a>
+        </div>
         <div className="footer-line" />
         <small>© 2026 Odunayo & Ibitayo · Made with love</small>
       </footer>

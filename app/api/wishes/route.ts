@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { formatWishDateTime } from '@/lib/utils'
 
 // Force dynamic execution with zero cache so all wishes are live
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,7 @@ const defaultWishes = [
     name: 'The Akinnibosun Family',
     location: 'Lagos, Nigeria',
     message: 'May your union be blessed with unending joy, peace, and abundance. We are so proud of you both and pray God’s favor guides your new home!',
-    date: 'November 2026',
+    date: 'Nov 8, 2026 · 10:30 AM',
     heartCount: 14,
   },
   {
@@ -37,7 +38,7 @@ const defaultWishes = [
     name: 'Pastor & Mrs. Akinde',
     location: 'Ogun State, Nigeria',
     message: 'Congratulations our beloved Odunayo and Ibitayo! As you step into holy matrimony, may God’s presence never depart from your home.',
-    date: 'November 2026',
+    date: 'Nov 8, 2026 · 11:45 AM',
     heartCount: 19,
   },
   {
@@ -45,7 +46,7 @@ const defaultWishes = [
     name: 'Uncle Tunde & Family',
     location: 'London, UK',
     message: 'Warmest congratulations all the way from the UK! What God has joined together, let no man put asunder. Wishing you a lifetime of laughter and shared dreams.',
-    date: 'November 2026',
+    date: 'Nov 8, 2026 · 2:15 PM',
     heartCount: 11,
   },
 ]
@@ -69,6 +70,7 @@ async function getUpstashWishes() {
         try {
           const obj = typeof item === 'string' ? JSON.parse(item) : item
           if (obj && typeof obj === 'object' && obj.name && obj.message) {
+            obj.date = formatWishDateTime(obj.date, obj.id)
             parsed.push(obj)
           }
         } catch {
@@ -162,7 +164,10 @@ function getLocalWishes() {
       const data = fs.readFileSync(filePath, 'utf8')
       const parsed = JSON.parse(data)
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed
+        return parsed.map((w: any) => ({
+          ...w,
+          date: formatWishDateTime(w.date, w.id),
+        }))
       }
     }
   } catch (error) {
@@ -220,12 +225,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Name and message are required.' }, { status: 400, headers: noCacheHeaders })
     }
 
+    const wishId = (body.id && String(body.id)) || Date.now().toString()
+    const formattedDate = formatWishDateTime(body.date, wishId)
+
     const newWish = {
-      id: Date.now().toString(),
+      id: wishId,
       name: name.trim().slice(0, 100),
       location: (location || 'Well-wisher').trim().slice(0, 80),
       message: message.trim().slice(0, 600),
-      date: 'Just now',
+      date: formattedDate,
       heartCount: 1,
     }
 

@@ -34,6 +34,7 @@ import {
 import confetti from 'canvas-confetti'
 import { motion, AnimatePresence, Variants, useScroll, useTransform } from 'framer-motion'
 import { AudioPlayer } from '@/components/audio-player'
+import { formatWishDateTime } from '@/lib/utils'
 
 const eventDate = new Date('2026-11-28T08:00:00+01:00')
 const venue = 'Christ Apostolic Church, Mountain of Salvation, No 34, Odekale street, Baba Barber Junction, Ewupe, Sango Ota, Ogun State'
@@ -196,7 +197,7 @@ export default function Page() {
       name: 'The Akinnibosun Family',
       location: 'Lagos, Nigeria',
       message: 'May your union be blessed with unending joy, peace, and abundance. We are so proud of you both and pray God’s favor guides your new home!',
-      date: 'November 2026',
+      date: 'Nov 8, 2026 · 10:30 AM',
       heartCount: 14,
     },
     {
@@ -204,7 +205,7 @@ export default function Page() {
       name: 'Pastor & Mrs. Akinde',
       location: 'Ogun State, Nigeria',
       message: 'Congratulations our beloved Odunayo and Ibitayo! As you step into holy matrimony, may God’s presence never depart from your home.',
-      date: 'November 2026',
+      date: 'Nov 8, 2026 · 11:45 AM',
       heartCount: 19,
     },
     {
@@ -212,7 +213,7 @@ export default function Page() {
       name: 'Uncle Tunde & Family',
       location: 'London, UK',
       message: 'Warmest congratulations all the way from the UK! What God has joined together, let no man put asunder. Wishing you a lifetime of laughter and shared dreams.',
-      date: 'November 2026',
+      date: 'Nov 8, 2026 · 2:15 PM',
       heartCount: 11,
     },
   ])
@@ -283,7 +284,11 @@ export default function Page() {
         })
         const data = await res.json()
         if (isMounted && data.wishes && Array.isArray(data.wishes) && data.wishes.length > 0) {
-          setWishes(data.wishes)
+          const formatted = data.wishes.map((w: Wish) => ({
+            ...w,
+            date: formatWishDateTime(w.date, w.id),
+          }))
+          setWishes(formatted)
         }
       } catch {
         // Fallback to local storage if API is unreachable
@@ -316,12 +321,15 @@ export default function Page() {
 
     setIsSubmittingWish(true)
 
+    const wishId = Date.now().toString()
+    const formattedDate = formatWishDateTime(new Date(), wishId)
+
     const newWish: Wish = {
-      id: Date.now().toString(),
+      id: wishId,
       name: wishName.trim(),
       location: wishLocation.trim() || 'Well-wisher',
       message: wishMessage.trim(),
-      date: 'Just now',
+      date: formattedDate,
       heartCount: 1,
     }
 
@@ -405,7 +413,7 @@ export default function Page() {
     // 1. Dispatch custom play event to unlock audio synchronously
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('play-wedding-music'))
-      ;(window as any).__playWeddingMusic?.()
+        ; (window as any).__playWeddingMusic?.()
     }
 
     // 2. Dismiss entrance overlay
@@ -1476,8 +1484,18 @@ export default function Page() {
                       {item.location}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '10.5px', color: 'var(--muted)' }}>
-                        {item.date}
+                      <span
+                        style={{
+                          fontSize: '10.5px',
+                          color: 'var(--muted)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4.5px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <Clock3 className="w-3 h-3 text-[#ad8b5c]" />
+                        {formatWishDateTime(item.date, item.id)}
                       </span>
                       {isAdminUnlocked && (
                         <button

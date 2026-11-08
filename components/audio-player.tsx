@@ -61,6 +61,7 @@ export function AudioPlayer() {
   const handleUserGesture = useCallback(async () => {
     const audio = audioRef.current
     if (!audio) return
+    if (hasStartedOnce && !audio.paused) return
 
     unlockWebAudio()
     audio.muted = false
@@ -74,23 +75,25 @@ export function AudioPlayer() {
     } catch {
       // Keep waiting for subsequent valid user interaction
     }
-  }, [])
+  }, [hasStartedOnce])
 
   useEffect(() => {
     // 1. Attempt unmuted autoplay immediately on mount
     attemptPlay()
 
     // 2. Register global user gesture listeners on window and document
-    const gestureEvents = ['pointerdown', 'touchstart', 'touchend', 'click', 'keydown']
+    const gestureEvents = ['touchstart', 'click', 'pointerdown', 'touchend', 'keydown']
 
     const gestureListener = () => {
       handleUserGesture()
     }
 
-    gestureEvents.forEach((evt) => {
-      window.addEventListener(evt, gestureListener, { capture: true, passive: true })
-      document.addEventListener(evt, gestureListener, { capture: true, passive: true })
-    })
+    if (!hasStartedOnce) {
+      gestureEvents.forEach((evt) => {
+        window.addEventListener(evt, gestureListener, { capture: true, passive: true })
+        document.addEventListener(evt, gestureListener, { capture: true, passive: true })
+      })
+    }
 
     // 3. Listen for custom 'play-wedding-music' event dispatched by splash screen or buttons
     const customListener = () => {

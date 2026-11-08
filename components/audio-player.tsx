@@ -11,7 +11,7 @@ function unlockWebAudio() {
     if (AudioCtxClass) {
       const ctx = new AudioCtxClass()
       if (ctx.state === 'suspended') {
-        ctx.resume().catch(() => {})
+        ctx.resume().catch(() => { })
       }
       const buffer = ctx.createBuffer(1, 1, 22050)
       const source = ctx.createBufferSource()
@@ -19,11 +19,12 @@ function unlockWebAudio() {
       source.connect(ctx.destination)
       source.start(0)
     }
-  } catch {}
+  } catch { }
 }
 
 export function AudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const isMutedRef = useRef(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [autoplayBlocked, setAutoplayBlocked] = useState(false)
@@ -36,8 +37,10 @@ export function AudioPlayer() {
     if (!audio) return false
 
     unlockWebAudio()
-    audio.muted = false
-    audio.volume = 0.65
+    if (!isMutedRef.current) {
+      audio.muted = false
+      audio.volume = 0.75
+    }
 
     try {
       await audio.play()
@@ -51,7 +54,7 @@ export function AudioPlayer() {
       try {
         audio.muted = true
         await audio.play()
-      } catch {}
+      } catch { }
       setAutoplayBlocked(true)
       return false
     }
@@ -61,11 +64,13 @@ export function AudioPlayer() {
   const handleUserGesture = useCallback(async () => {
     const audio = audioRef.current
     if (!audio) return
+    // Respect user's explicit mute choice
+    if (isMutedRef.current) return
     if (hasStartedOnce && !audio.paused) return
 
     unlockWebAudio()
     audio.muted = false
-    audio.volume = 0.65
+    audio.volume = 0.75
 
     try {
       await audio.play()
@@ -103,14 +108,14 @@ export function AudioPlayer() {
 
     // 4. Expose to global window
     if (typeof window !== 'undefined') {
-      ;(window as any).__playWeddingMusic = handleUserGesture
+      ; (window as any).__playWeddingMusic = handleUserGesture
     }
 
     // 5. Visibility change handler: resume if user switches back to tab
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && hasStartedOnce && !isMuted) {
+      if (document.visibilityState === 'visible' && hasStartedOnce && !isMutedRef.current) {
         if (audioRef.current && audioRef.current.paused) {
-          audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
+          audioRef.current.play().then(() => setIsPlaying(true)).catch(() => { })
         }
       }
     }
@@ -124,7 +129,7 @@ export function AudioPlayer() {
       window.removeEventListener('play-wedding-music', customListener)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [attemptPlay, handleUserGesture, hasStartedOnce, isMuted])
+  }, [attemptPlay, handleUserGesture, hasStartedOnce])
 
   // Auto-dismiss the prompt banner after 4s or immediately upon scroll so it doesn't obstruct content
   useEffect(() => {
@@ -156,8 +161,10 @@ export function AudioPlayer() {
       audio.pause()
       setIsPlaying(false)
     } else {
-      audio.muted = false
-      audio.volume = 0.65
+      if (!isMutedRef.current) {
+        audio.muted = false
+        audio.volume = 0.75
+      }
       audio.play().then(() => {
         setIsPlaying(true)
         setAutoplayBlocked(false)
@@ -172,8 +179,11 @@ export function AudioPlayer() {
     e.stopPropagation()
     const audio = audioRef.current
     if (!audio) return
-    audio.muted = !isMuted
-    setIsMuted(!isMuted)
+    const nextMuted = !isMuted
+    isMutedRef.current = nextMuted
+    setIsMuted(nextMuted)
+    audio.muted = nextMuted
+    audio.volume = nextMuted ? 0 : 0.75
   }
 
   const dismissBanner = (e: React.MouseEvent) => {
@@ -192,7 +202,7 @@ export function AudioPlayer() {
         onEnded={() => {
           if (audioRef.current) {
             audioRef.current.currentTime = 0
-            audioRef.current.play().catch(() => {})
+            audioRef.current.play().catch(() => { })
           }
         }}
       >

@@ -402,13 +402,13 @@ export default function Page() {
   }, [lightbox, filteredGallery.length])
 
   const enterCelebration = useCallback(() => {
-    // 1. Dispatch custom play event to unlock audio
+    // 1. Dispatch custom play event to unlock audio synchronously
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('play-wedding-music'))
-        ; (window as any).__playWeddingMusic?.()
+      ;(window as any).__playWeddingMusic?.()
     }
 
-    // 2. Dismiss loading screen immediately
+    // 2. Dismiss entrance overlay
     setIsAppLoading(false)
 
     // 3. Fire celebratory wedding confetti
@@ -421,61 +421,6 @@ export default function Page() {
       zIndex: 100,
     })
   }, [])
-
-  useEffect(() => {
-    let frameId: number
-    let isActive = false
-
-    // Auto-enter after 2.8s if user hasn't tapped yet
-    const timer = setTimeout(() => {
-      enterCelebration()
-      isActive = true
-
-      const colors = ['#ad8b5c', '#d8cfc3', '#fcfaf7', '#2d2925']
-
-      function randomInRange(min: number, max: number) {
-        return Math.random() * (max - min) + min
-      }
-
-      let skew = 1
-      let lastTime = Date.now()
-
-        ; (function frame() {
-          if (!isActive) return
-
-          frameId = requestAnimationFrame(frame)
-
-          const now = Date.now()
-          if (now - lastTime < 400) return
-          lastTime = now
-
-          skew = Math.max(0.8, skew - 0.001)
-
-          confetti({
-            particleCount: 1,
-            startVelocity: 0,
-            ticks: 800,
-            origin: {
-              x: Math.random(),
-              y: Math.random() * skew - 0.2,
-            },
-            colors: colors,
-            shapes: ['circle'],
-            gravity: randomInRange(0.1, 0.2),
-            scalar: randomInRange(0.4, 0.9),
-            drift: randomInRange(-0.2, 0.2),
-            disableForReducedMotion: true,
-            zIndex: 100,
-          })
-        })()
-    }, 2800)
-
-    return () => {
-      clearTimeout(timer)
-      isActive = false
-      if (frameId) cancelAnimationFrame(frameId)
-    }
-  }, [enterCelebration])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -553,25 +498,25 @@ export default function Page() {
                   marginTop: '28px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '11px 24px',
+                  gap: '10px',
+                  padding: '13px 28px',
                   borderRadius: '50px',
-                  background: 'rgba(212, 175, 124, 0.16)',
-                  border: '1px solid rgba(212, 175, 124, 0.55)',
+                  background: 'linear-gradient(135deg, rgba(212, 175, 124, 0.3) 0%, rgba(173, 139, 92, 0.15) 100%)',
+                  border: '1.5px solid rgba(212, 175, 124, 0.8)',
                   color: '#fff',
-                  fontSize: '11px',
+                  fontSize: '11.5px',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.14em',
-                  fontWeight: 600,
-                  boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+                  letterSpacing: '0.16em',
+                  fontWeight: 700,
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(212, 175, 124, 0.3)',
                 }}
               >
-                <Music className="w-3.5 h-3.5 text-[#d4af7c] animate-pulse" />
-                <span>Open Invitation ♫</span>
+                <Music className="w-4 h-4 text-[#d4af7c] animate-pulse" />
+                <span>Open Invitation &amp; Play Music ♫</span>
               </motion.div>
 
-              <span style={{ marginTop: '14px', fontSize: '9.5px', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-                Tap anywhere to enter with music
+              <span style={{ marginTop: '16px', fontSize: '10px', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase' }}>
+                Tap anywhere to enter our celebration
               </span>
             </motion.div>
           </motion.div>

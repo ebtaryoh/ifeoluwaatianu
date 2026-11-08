@@ -27,6 +27,9 @@ import {
   X,
   CreditCard,
   Gift,
+  Lock,
+  ShieldCheck,
+  Trash2,
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { motion, AnimatePresence, Variants, useScroll, useTransform } from 'framer-motion'
@@ -222,22 +225,83 @@ export default function Page() {
   const [likedWishes, setLikedWishes] = useState<Record<string, boolean>>({})
   const [visibleWishesCount, setVisibleWishesCount] = useState(5)
 
-  // Load saved wishes from API or LocalStorage
+  // Couple Wishes Moderation State
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false)
+  const [showPinModal, setShowPinModal] = useState(false)
+  const [adminPinInput, setAdminPinInput] = useState('')
+  const [adminPinError, setAdminPinError] = useState('')
+  const [deletingWishId, setDeletingWishId] = useState<string | null>(null)
+
+  const handleUnlockAdmin = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    if (adminPinInput.trim() === '2026') {
+      setIsAdminUnlocked(true)
+      setShowPinModal(false)
+      setAdminPinError('')
+      setAdminPinInput('')
+    } else {
+      setAdminPinError('Incorrect PIN. Please try again.')
+    }
+  }
+
+  const handleDeleteWish = async (wishId: string, authorName: string) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to permanently delete the wish from "${authorName}"?`
+    )
+    if (!confirmDelete) return
+
+    setDeletingWishId(wishId)
+    try {
+      const response = await fetch('/api/wishes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: wishId, adminPin: '2026' }),
+      })
+      const data = await response.json()
+      if (data.success && data.wishes) {
+        setWishes(data.wishes)
+      } else {
+        setWishes((prev) => prev.filter((w) => w.id !== wishId))
+      }
+    } catch (err) {
+      console.error('Delete wish error:', err)
+      setWishes((prev) => prev.filter((w) => w.id !== wishId))
+    } finally {
+      setDeletingWishId(null)
+    }
+  }
+
+  // Real-time synchronization of wishes across all guests & devices
   useEffect(() => {
-    fetch('/api/wishes')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.wishes && Array.isArray(data.wishes) && data.wishes.length > 0) {
+    let isMounted = true
+
+    const fetchWishes = async () => {
+      try {
+        const res = await fetch(`/api/wishes?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+        })
+        const data = await res.json()
+        if (isMounted && data.wishes && Array.isArray(data.wishes) && data.wishes.length > 0) {
           setWishes(data.wishes)
         }
-      })
-      .catch(() => {
+      } catch {
         // Fallback to local storage if API is unreachable
         try {
           const local = localStorage.getItem('wedding_wishes')
-          if (local) setWishes(JSON.parse(local))
+          if (isMounted && local) setWishes(JSON.parse(local))
         } catch { }
-      })
+      }
+    }
+
+    fetchWishes()
+    // Poll every 5 seconds so anyone posting a wish appears live for all guests without refreshing
+    const interval = setInterval(fetchWishes, 5000)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
   }, [])
 
   const handleCopyAccount = (accountNumber: string, type: 'sterling' | 'gtb') => {
@@ -261,41 +325,41 @@ export default function Page() {
       heartCount: 1,
     }
 
+    // 1. Optimistic Instant UI Update:
+    // Insert newWish at the top of wishes right away so the user sees it immediately on screen!
+    setWishes((prev) => [newWish, ...prev.filter((w) => w.id !== newWish.id)])
+    setVisibleWishesCount((prev) => Math.max(prev, 5))
+    setWishSuccess(true)
+    setWishName('')
+    setWishLocation('')
+    setWishMessage('')
+
+    confetti({
+      particleCount: 120,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ['#ad8b5c', '#d8cfc3', '#fcfaf7', '#2d2925'],
+    })
+
     try {
-      const response = await fetch('/api/wishes', {
+      const response = await fetch(`/api/wishes?t=${Date.now()}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
         body: JSON.stringify(newWish),
       })
       const data = await response.json()
-      if (data.wishes) {
+      if (data.wishes && Array.isArray(data.wishes)) {
         setWishes(data.wishes)
-      } else {
-        setWishes((prev) => [newWish, ...prev])
       }
     } catch {
       // Local fallback
-      setWishes((prev) => {
-        const updated = [newWish, ...prev]
-        try {
-          localStorage.setItem('wedding_wishes', JSON.stringify(updated))
-        } catch { }
-        return updated
-      })
+      try {
+        const local = localStorage.getItem('wedding_wishes')
+        const current = local ? JSON.parse(local) : []
+        localStorage.setItem('wedding_wishes', JSON.stringify([newWish, ...current]))
+      } catch { }
     } finally {
       setIsSubmittingWish(false)
-      setWishSuccess(true)
-      setWishName('')
-      setWishLocation('')
-      setWishMessage('')
-
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ['#ad8b5c', '#d8cfc3', '#fcfaf7', '#2d2925'],
-      })
-
       setTimeout(() => setWishSuccess(false), 6000)
     }
   }
@@ -1466,9 +1530,24 @@ export default function Page() {
                     <span style={{ fontSize: '10.5px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 600 }}>
                       {item.location}
                     </span>
-                    <span style={{ fontSize: '10.5px', color: 'var(--muted)' }}>
-                      {item.date}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '10.5px', color: 'var(--muted)' }}>
+                        {item.date}
+                      </span>
+                      {isAdminUnlocked && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteWish(item.id, item.name)}
+                          disabled={deletingWishId === item.id}
+                          className="delete-wish-btn"
+                          title={`Delete wish from ${item.name}`}
+                          aria-label={`Delete wish from ${item.name}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>{deletingWishId === item.id ? 'Deleting...' : 'Delete'}</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p className="wish-card-text">
                     “{item.message}”
@@ -1546,7 +1625,201 @@ export default function Page() {
               </span>
             </div>
           )}
+
+          {/* Couple Access / Wishes Moderation Bar */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
+            {!isAdminUnlocked ? (
+              <button
+                type="button"
+                onClick={() => setShowPinModal(true)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--muted)',
+                  fontSize: '11px',
+                  letterSpacing: '0.08em',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--ink)'
+                  e.currentTarget.style.background = 'rgba(173,139,92,0.1)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--muted)'
+                  e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Couple Access · Manage Wishes</span>
+              </button>
+            ) : (
+              <div
+                style={{
+                  background: 'rgba(212, 175, 124, 0.15)',
+                  border: '1px solid rgba(212, 175, 124, 0.45)',
+                  borderRadius: '30px',
+                  padding: '8px 20px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  fontSize: '12px',
+                  color: 'var(--ink)',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+                }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                  <ShieldCheck className="w-4 h-4 text-[#ad8b5c]" />
+                  Moderation Mode Active (Tap the red Delete button on any wish to remove it)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsAdminUnlocked(false)}
+                  style={{
+                    background: 'var(--ink)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '20px',
+                    padding: '4px 12px',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Exit / Lock
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Couple Moderation PIN Modal */}
+        <AnimatePresence>
+          {showPinModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.65)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                zIndex: 120,
+                display: 'grid',
+                placeItems: 'center',
+                padding: '20px',
+              }}
+              onClick={() => {
+                setShowPinModal(false)
+                setAdminPinError('')
+                setAdminPinInput('')
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="glassmorphism"
+                style={{
+                  maxWidth: '380px',
+                  width: '100%',
+                  padding: '28px 24px',
+                  borderRadius: '20px',
+                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    background: 'rgba(173, 139, 92, 0.15)',
+                    border: '1px solid rgba(173, 139, 92, 0.35)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    margin: '0 auto 14px',
+                  }}
+                >
+                  <Lock className="w-5 h-5 text-[#ad8b5c]" />
+                </div>
+
+                <h3 style={{ font: "400 20px 'Playfair Display', serif", margin: '0 0 6px', color: 'var(--ink)' }}>
+                  Couple Access
+                </h3>
+                <p style={{ color: 'var(--muted)', fontSize: '12.5px', margin: '0 0 18px', lineHeight: 1.6 }}>
+                  Enter your wedding PIN to delete or moderate unwanted wishes from the live wall.
+                </p>
+
+                <form onSubmit={handleUnlockAdmin}>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    autoFocus
+                    value={adminPinInput}
+                    onChange={(e) => {
+                      setAdminPinInput(e.target.value)
+                      setAdminPinError('')
+                    }}
+                    placeholder="Enter PIN (2026)"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(173, 139, 92, 0.4)',
+                      background: '#fff',
+                      textAlign: 'center',
+                      fontSize: '18px',
+                      letterSpacing: '0.25em',
+                      fontWeight: 700,
+                      color: 'var(--ink)',
+                      outline: 'none',
+                      marginBottom: '12px',
+                    }}
+                  />
+
+                  {adminPinError && (
+                    <div style={{ color: '#ef4444', fontSize: '11.5px', marginBottom: '12px' }}>
+                      {adminPinError}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPinModal(false)
+                        setAdminPinError('')
+                        setAdminPinInput('')
+                      }}
+                      className="button button-light"
+                      style={{ padding: '10px 18px', borderRadius: '8px', fontSize: '11px' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="button button-dark"
+                      style={{ padding: '10px 22px', borderRadius: '8px', fontSize: '11px' }}
+                    >
+                      Unlock Moderation
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
 
       {/* Travel & Stay Section */}

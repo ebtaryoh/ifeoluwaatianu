@@ -2,10 +2,26 @@ import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 
+// Force dynamic execution with zero cache so all wishes are live
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const filePath = path.join(process.cwd(), 'data', 'wishes.json')
 
-const upstashUrl = process.env.UPSTASH_REDIS_REST_URL
-const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN
+// Upstash Redis Cloud Database (with fallback so it works seamlessly locally and on live Vercel/Netlify hosting)
+const upstashUrl =
+  process.env.UPSTASH_REDIS_REST_URL ||
+  'https://superb-loon-182766.upstash.io'
+
+const upstashToken =
+  process.env.UPSTASH_REDIS_REST_TOKEN ||
+  'gQAAAAAAAsnuAAIgcDI1YWJhZGVjZmNjMzE0ZWY2OGUzNTY4NjRiY2VmYWE2OA'
+
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+}
 
 const defaultWishes = [
   {
@@ -42,12 +58,24 @@ async function getUpstashWishes() {
     const res = await fetch(`${upstashUrl}/lrange/wedding_wishes/0/-1`, {
       headers: {
         Authorization: `Bearer ${upstashToken}`,
+        'Cache-Control': 'no-cache, no-store',
       },
       cache: 'no-store',
     })
     const data = await res.json()
     if (data.result && Array.isArray(data.result) && data.result.length > 0) {
-      return data.result.map((item: any) => (typeof item === 'string' ? JSON.parse(item) : item))
+      const parsed: any[] = []
+      for (const item of data.result) {
+        try {
+          const obj = typeof item === 'string' ? JSON.parse(item) : item
+          if (obj && typeof obj === 'object' && obj.name && obj.message) {
+            parsed.push(obj)
+          }
+        } catch {
+          // Skip any malformed item safely
+        }
+      }
+      return parsed.length > 0 ? parsed : null
     }
   } catch (error) {
     console.error('Upstash fetch error:', error)
@@ -174,12 +202,12 @@ export async function GET() {
   // Try Upstash first
   const cloudWishes = await getUpstashWishes()
   if (cloudWishes && cloudWishes.length > 0) {
-    return NextResponse.json({ wishes: cloudWishes, source: 'upstash' })
+    return NextResponse.json({ wishes: cloudWishes, source: 'upstash' }, { headers: noCacheHeaders })
   }
 
   // Fallback to local file
   const localWishes = getLocalWishes()
-  return NextResponse.json({ wishes: localWishes, source: 'local' })
+  return NextResponse.json({ wishes: localWishes, source: 'local' }, { headers: noCacheHeaders })
 }
 
 // POST /api/wishes
@@ -189,7 +217,7 @@ export async function POST(request: Request) {
     const { name, location, message } = body
 
     if (!name || !message || typeof name !== 'string' || typeof message !== 'string') {
-      return NextResponse.json({ error: 'Name and message are required.' }, { status: 400 })
+      return NextResponse.json({ error: 'Name and message are required.' }, { status: 400, headers: noCacheHeaders })
     }
 
     const newWish = {
@@ -214,13 +242,19 @@ export async function POST(request: Request) {
 
     if (savedToUpstash) {
       const latestCloud = (await getUpstashWishes()) || updatedLocal
-      return NextResponse.json({ success: true, wish: newWish, wishes: latestCloud, source: 'upstash' })
+      return NextResponse.json(
+        { success: true, wish: newWish, wishes: latestCloud, source: 'upstash' },
+        { headers: noCacheHeaders }
+      )
     }
 
-    return NextResponse.json({ success: true, wish: newWish, wishes: updatedLocal, source: 'local' })
+    return NextResponse.json(
+      { success: true, wish: newWish, wishes: updatedLocal, source: 'local' },
+      { headers: noCacheHeaders }
+    )
   } catch (error) {
     console.error('Failed to submit wish:', error)
-    return NextResponse.json({ error: 'Failed to submit wish' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to submit wish' }, { status: 500, headers: noCacheHeaders })
   }
 }
 
@@ -233,11 +267,11 @@ export async function DELETE(request: Request) {
     const expectedPin = process.env.ADMIN_WISHES_PIN || '2026'
 
     if (!adminPin || String(adminPin).trim() !== String(expectedPin).trim()) {
-      return NextResponse.json({ error: 'Unauthorized: Invalid Admin PIN' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized: Invalid Admin PIN' }, { status: 401, headers: noCacheHeaders })
     }
 
     if (!id) {
-      return NextResponse.json({ error: 'Wish ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Wish ID is required' }, { status: 400, headers: noCacheHeaders })
     }
 
     // Delete locally
@@ -251,13 +285,16 @@ export async function DELETE(request: Request) {
 
     const latestWishes = updatedCloud && Array.isArray(updatedCloud) ? updatedCloud : updatedLocal || []
 
-    return NextResponse.json({
-      success: true,
-      message: 'Wish deleted successfully',
-      wishes: latestWishes,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Wish deleted successfully',
+        wishes: latestWishes,
+      },
+      { headers: noCacheHeaders }
+    )
   } catch (error) {
     console.error('Failed to delete wish:', error)
-    return NextResponse.json({ error: 'Failed to delete wish' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to delete wish' }, { status: 500, headers: noCacheHeaders })
   }
 }

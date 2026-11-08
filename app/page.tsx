@@ -422,7 +422,7 @@ export default function Page() {
   }, [])
 
   const [faq, setFaq] = useState<number | null>(0)
-  const nav = ['Our Story', 'The Wedding', 'Schedule', 'Gallery', 'Gifts', 'Wishes', 'Travel', 'FAQ']
+  const nav = ['Our Story', 'The Wedding', 'Schedule', 'Live Stream', 'Gallery', 'Gifts', 'Wishes', 'Travel', 'FAQ']
   const directions = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`
 
   const fadeUp: Variants = {
@@ -612,6 +612,21 @@ export default function Page() {
           </motion.p>
 
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <motion.a
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 1 } } }}
+              className="button button-light glassmorphism-dark"
+              href="#live-stream"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                borderColor: 'rgba(239, 68, 68, 0.55)',
+                background: 'rgba(239, 68, 68, 0.15)',
+              }}
+            >
+              <span className="live-dot" />
+              Watch Live Stream <Video className="w-3.5 h-3.5 text-red-400" />
+            </motion.a>
             <motion.a
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 1 } } }}
               className="button button-light glassmorphism-dark"
@@ -885,6 +900,19 @@ export default function Page() {
           >
             Call for directions <PhoneCall className="w-4 h-4 text-[#d4af7c]" />
           </motion.a>
+          <motion.a
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            viewport={{ once: true }}
+            className="button button-dark glassmorphism-dark"
+            href="#live-stream"
+            style={{
+              borderColor: 'rgba(239, 68, 68, 0.55)',
+            }}
+          >
+            Live Stream <Video className="w-4 h-4 text-red-400" />
+          </motion.a>
         </div>
       </section>
 
@@ -917,6 +945,112 @@ export default function Page() {
             <p>Christ Apostolic Church, Mountain of Salvation. Solemnization of holy matrimony, covenant vows, and thanksgiving.</p>
           </motion.div>
         </motion.div>
+      </section>
+
+      {/* VIRTUAL CELEBRATION & LIVE STREAM SECTION */}
+      <section className="live-stream-section section-pad" id="live-stream">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="section-heading centered">
+          <div className="live-badge-glow">
+            <span className="live-dot" />
+            <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.18em', color: '#fca5a5', fontWeight: 600 }}>Virtual Celebration</span>
+          </div>
+          <h2 style={{ color: '#fff' }}>
+            Join Us Live<br />
+            <i>from anywhere in the world.</i>
+          </h2>
+          <p style={{ maxWidth: 620, margin: '14px auto 0', color: '#dfd7ce', fontSize: '14.5px', lineHeight: 1.8 }}>
+            For our beloved family and friends celebrating with us from across Nigeria, the USA, UK, Canada, Australia, and beyond, witness our holy union in real-time through our live broadcast.
+          </p>
+        </motion.div>
+
+        <div className="live-screen-card">
+          <div className="live-screen-stage">
+            <img
+              src="/images/romantic-blue-and-gold-embrace.png"
+              alt="Odunayo and Ibitayo Live Broadcast"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 0.38,
+                filter: 'blur(1px)',
+              }}
+            />
+            <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', textAlign: 'center' }}>
+              <div
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: 'rgba(239, 68, 68, 0.9)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  marginBottom: '16px',
+                  boxShadow: '0 0 30px rgba(239, 68, 68, 0.7)',
+                }}
+              >
+                <Video className="w-8 h-8 text-white" />
+              </div>
+              <h3 style={{ font: "400 24px 'Playfair Display', serif", margin: '0 0 8px', color: '#fff' }}>
+                Live Wedding Broadcast
+              </h3>
+              <p style={{ color: 'var(--gold-light)', fontSize: '13.5px', margin: 0, letterSpacing: '0.04em' }}>
+                Saturday, November 28, 2026 · Starting 08:00 AM Prompt (WAT)
+              </p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a
+              href="https://www.youtube.com"
+              target="_blank"
+              rel="noreferrer"
+              className="button"
+              style={{
+                background: '#e02424',
+                color: '#fff',
+                border: 'none',
+                padding: '14px 28px',
+                borderRadius: '50px',
+                fontSize: '11px',
+                fontWeight: 600,
+                letterSpacing: '0.14em',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 8px 25px rgba(224, 36, 36, 0.35)',
+                textDecoration: 'none',
+              }}
+            >
+              <Video className="w-4 h-4" /> Watch Live Broadcast
+            </a>
+            <a
+              href={calendarUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="button button-light"
+              style={{
+                padding: '14px 24px',
+                borderRadius: '50px',
+                fontSize: '11px',
+                letterSpacing: '0.14em',
+                borderColor: 'rgba(255, 255, 255, 0.35)',
+                textDecoration: 'none',
+              }}
+            >
+              <Calendar className="w-4 h-4 text-[#d4af7c]" /> Set Live Stream Reminder
+            </a>
+          </div>
+
+          <p style={{ color: '#aaa096', fontSize: '12px', margin: '22px 0 0', lineHeight: 1.6 }}>
+            The live stream will go live 15 minutes before the ceremony at <strong>07:45 AM WAT</strong>.
+            <br />
+            Need assistance connecting? Call <strong>Olamide</strong> on <a href="tel:07037008505" style={{ color: 'var(--gold-light)' }}>07037008505</a>.
+          </p>
+        </div>
       </section>
 
       {/* Pro Styled Wedding Gallery Section */}
@@ -1521,6 +1655,7 @@ export default function Page() {
           {[
             'Where is the wedding?',
             'What time should guests arrive?',
+            'Can I watch the wedding live if I cannot attend in person?',
             'How can I send my wedding gift or contribution?',
             'Who can I call for directions or enquiries?',
             'Is there a dress code / colors of the day?',
@@ -1543,7 +1678,8 @@ export default function Page() {
                   {[
                     venue,
                     'Please note our prompt timing: Engagement & Traditional Wedding begins at 8:00 AM Prompt, followed by the Church Wedding Ceremony at 10:00 AM Prompt.',
-                    'You can transfer directly to either Sterling Bank (0088927432 · Akinnibosun Ibitayo) or GTBank (0142301947 · Odunayo Akinde Janet). Guests from abroad can send seamlessly via LemFi, Remitly, Sendwave, or WorldRemit.',
+                    'Yes, absolutely! We are broadcasting the ceremonies live for family and friends across Nigeria and abroad (USA, UK, Canada, Australia). Click the "Live Stream" button in the menu or on the page to watch in real-time on Saturday, November 28, 2026, starting at 08:00 AM WAT.',
+                    'You can transfer directly to either GTBank (0142301947 · Odunayo Akinde Janet) or Sterling Bank (0088927432 · Akinnibosun Ibitayo). Guests from abroad can send seamlessly via LemFi, Remitly, Sendwave, or WorldRemit.',
                     'For real-time directions, landmarks in Sango Ota, or any wedding day enquiries, please call Olamide on 07037008505.',
                     'Our colors of the day are Purple and champagne gold. We cannot wait to see you looking magnificent!',
                   ][i]}

@@ -75,6 +75,58 @@ async function addUpstashWish(wish: any) {
   }
 }
 
+async function deleteUpstashWish(wishId: string) {
+  if (!upstashUrl || !upstashToken) return null
+
+  try {
+    // 1. Fetch current list of wishes
+    const res = await fetch(`${upstashUrl}/lrange/wedding_wishes/0/-1`, {
+      headers: {
+        Authorization: `Bearer ${upstashToken}`,
+      },
+      cache: 'no-store',
+    })
+    const data = await res.json()
+    if (!data.result || !Array.isArray(data.result)) return null
+
+    const parsedItems = data.result.map((item: any) =>
+      typeof item === 'string' ? JSON.parse(item) : item
+    )
+
+    // 2. Filter out the target wish
+    const remaining = parsedItems.filter((w: any) => String(w.id) !== String(wishId))
+
+    // 3. Clear the key in Redis
+    await fetch(`${upstashUrl}/del/wedding_wishes`, {
+      headers: {
+        Authorization: `Bearer ${upstashToken}`,
+      },
+    })
+
+    // 4. Re-insert remaining items in order if any exist
+    if (remaining.length > 0) {
+      const pushCommand = [
+        'RPUSH',
+        'wedding_wishes',
+        ...remaining.map((item: any) => JSON.stringify(item)),
+      ]
+      await fetch(upstashUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${upstashToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(pushCommand),
+      })
+    }
+
+    return remaining
+  } catch (error) {
+    console.error('Upstash delete error:', error)
+    return null
+  }
+}
+
 // 2. Local Fallback Helpers
 function getLocalWishes() {
   try {
@@ -102,6 +154,18 @@ function saveLocalWishes(wishes: any[]) {
   } catch (error) {
     console.error('Error saving local wishes:', error)
     return false
+  }
+}
+
+function deleteLocalWish(wishId: string) {
+  try {
+    const current = getLocalWishes()
+    const remaining = current.filter((w: any) => String(w.id) !== String(wishId))
+    saveLocalWishes(remaining)
+    return remaining
+  } catch (error) {
+    console.error('Error deleting local wish:', error)
+    return null
   }
 }
 
@@ -157,5 +221,43 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Failed to submit wish:', error)
     return NextResponse.json({ error: 'Failed to submit wish' }, { status: 500 })
+  }
+}
+
+// DELETE /api/wishes - Admin deletion of unwanted wishes with PIN verification
+export async function DELETE(request: Request) {
+  try {
+    const body = await request.json()
+    const { id, adminPin } = body
+
+    const expectedPin = process.env.ADMIN_WISHES_PIN || '2026'
+
+    if (!adminPin || String(adminPin).trim() !== String(expectedPin).trim()) {
+      return NextResponse.json({ error: 'Unauthorized: Invalid Admin PIN' }, { status: 401 })
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: 'Wish ID is required' }, { status: 400 })
+    }
+
+    // Delete locally
+    const updatedLocal = deleteLocalWish(id)
+
+    // Delete in Upstash Redis
+    let updatedCloud = null
+    if (upstashUrl && upstashToken) {
+      updatedCloud = await deleteUpstashWish(id)
+    }
+
+    const latestWishes = updatedCloud && Array.isArray(updatedCloud) ? updatedCloud : updatedLocal || []
+
+    return NextResponse.json({
+      success: true,
+      message: 'Wish deleted successfully',
+      wishes: latestWishes,
+    })
+  } catch (error) {
+    console.error('Failed to delete wish:', error)
+    return NextResponse.json({ error: 'Failed to delete wish' }, { status: 500 })
   }
 }

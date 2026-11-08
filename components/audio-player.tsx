@@ -123,13 +123,22 @@ export function AudioPlayer() {
     }
   }, [attemptPlay, handleUserGesture, hasStartedOnce, isMuted])
 
-  // Auto-dismiss the prompt banner after 5 seconds so it doesn't obstruct content
+  // Auto-dismiss the prompt banner after 4s or immediately upon scroll so it doesn't obstruct content
   useEffect(() => {
     if (autoplayBlocked && !hasStartedOnce) {
       const timer = setTimeout(() => {
         setBannerDismissed(true)
-      }, 5000)
-      return () => clearTimeout(timer)
+      }, 4000)
+
+      const handleScroll = () => {
+        setBannerDismissed(true)
+      }
+      window.addEventListener('scroll', handleScroll, { passive: true, once: true })
+
+      return () => {
+        clearTimeout(timer)
+        window.removeEventListener('scroll', handleScroll)
+      }
     }
   }, [autoplayBlocked, hasStartedOnce])
 

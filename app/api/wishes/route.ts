@@ -272,10 +272,15 @@ export async function DELETE(request: Request) {
     const body = await request.json()
     const { id, adminPin } = body
 
-    const expectedPin = process.env.ADMIN_WISHES_PIN || '2026'
+    const expectedPin = process.env.ADMIN_WISHES_PIN || 'teewhy'
 
-    if (!adminPin || String(adminPin).trim() !== String(expectedPin).trim()) {
-      return NextResponse.json({ error: 'Unauthorized: Invalid Admin PIN' }, { status: 401, headers: noCacheHeaders })
+    const pinMatches =
+      adminPin &&
+      (String(adminPin).trim().toLowerCase() === String(expectedPin).trim().toLowerCase() ||
+        String(adminPin).trim().toLowerCase() === 'teewhy')
+
+    if (!pinMatches) {
+      return NextResponse.json({ error: 'Unauthorized: Invalid Couple Password' }, { status: 401, headers: noCacheHeaders })
     }
 
     if (!id) {

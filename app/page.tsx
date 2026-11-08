@@ -235,13 +235,13 @@ export default function Page() {
 
   const handleUnlockAdmin = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    if (adminPinInput.trim() === '2026') {
+    if (adminPinInput.trim().toLowerCase() === 'teewhy') {
       setIsAdminUnlocked(true)
       setShowPinModal(false)
       setAdminPinError('')
       setAdminPinInput('')
     } else {
-      setAdminPinError('Incorrect PIN. Please try again.')
+      setAdminPinError('Incorrect password. Please try again.')
     }
   }
 
@@ -256,7 +256,7 @@ export default function Page() {
       const response = await fetch('/api/wishes', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: wishId, adminPin: '2026' }),
+        body: JSON.stringify({ id: wishId, adminPin: 'teewhy' }),
       })
       const data = await response.json()
       if (data.success && data.wishes) {
@@ -1720,21 +1720,23 @@ export default function Page() {
                   Couple Access
                 </h3>
                 <p style={{ color: 'var(--muted)', fontSize: '12.5px', margin: '0 0 18px', lineHeight: 1.6 }}>
-                  Enter your wedding PIN to delete or moderate unwanted wishes from the live wall.
+                  Enter the couple password to delete or moderate unwanted wishes from the live wall.
                 </p>
 
                 <form onSubmit={handleUnlockAdmin}>
                   <input
                     type="password"
-                    inputMode="numeric"
-                    maxLength={6}
+                    maxLength={32}
                     autoFocus
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={adminPinInput}
                     onChange={(e) => {
                       setAdminPinInput(e.target.value)
                       setAdminPinError('')
                     }}
-                    placeholder="Enter PIN (2026)"
+                    placeholder="Enter Password"
                     style={{
                       width: '100%',
                       padding: '12px 16px',
@@ -1742,9 +1744,9 @@ export default function Page() {
                       border: '1px solid rgba(173, 139, 92, 0.4)',
                       background: '#fff',
                       textAlign: 'center',
-                      fontSize: '18px',
-                      letterSpacing: '0.25em',
-                      fontWeight: 700,
+                      fontSize: '16px',
+                      letterSpacing: '0.12em',
+                      fontWeight: 600,
                       color: 'var(--ink)',
                       outline: 'none',
                       marginBottom: '12px',

@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Clock3,
   Copy,
+  Crown,
   Globe2,
   Heart,
   MapPin,
@@ -585,10 +586,10 @@ export default function Page() {
             variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 1 } } }}
           >
             <div className="hero-tag">
-              <Sparkles className="w-3.5 h-3.5 text-[#d4af7c]" />
+              <Crown className="w-3.5 h-3.5 text-[#d4af7c]" />
               <span>The Royal Union</span>
             </div>
-            <p className="eyebrow light">Together with their families</p>
+            <p className="eyebrow light" style={{ fontWeight: 700, letterSpacing: '0.22em' }}>Together with their families</p>
           </motion.div>
 
           <h1 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px 0' }}>
@@ -624,6 +625,7 @@ export default function Page() {
           <motion.p
             variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 1 } } }}
             className="hero-location"
+            style={{ fontWeight: 700, color: '#f3ece3' }}
           >
             Our wedding day <span>·</span> Ogun State, Nigeria
           </motion.p>
